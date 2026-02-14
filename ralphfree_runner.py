@@ -353,7 +353,25 @@ class ModelSelector:
     def __init__(self, config):
         self.models = config.get('models', {})
         self.fallback_chain = config.get('fallback_chain', ['deepseek-chat'])
+        
+        # Determine best default based on available keys
         self.default = config.get('default_model', 'deepseek-chat')
+        
+        # Check if default model's key is present
+        def has_key(model_name):
+            if model_name not in self.models: return False
+            cfg = self.models[model_name]
+            env_var = cfg.get('api_key_env', '')
+            return bool(os.getenv(env_var))
+            
+        if not has_key(self.default):
+            # Try to find a fallback that HAS a key
+            for model in self.fallback_chain:
+                if has_key(model):
+                    # print(f"  [ℹ Auto-switching default to {model} (key found)]") # Optional logging
+                    self.default = model
+                    break
+        
         self.current = self.default
         self._fallback_index = 0
         agent_cfg = config.get('agent', {})
@@ -408,12 +426,21 @@ class ModelSelector:
         return False
 
     def next_fallback(self):
-        self._fallback_index += 1
-        if self._fallback_index < len(self.fallback_chain):
+        while True:
+            self._fallback_index += 1
+            if self._fallback_index >= len(self.fallback_chain):
+                return None
+            
             next_model = self.fallback_chain[self._fallback_index]
-            self.current = next_model
-            return next_model
-        return None
+            cfg = self.models.get(next_model, {})
+            env_var = cfg.get('api_key_env', '')
+            
+            # If model is local (no key env) or key exists, try it
+            if not env_var or os.getenv(env_var):
+                self.current = next_model
+                return next_model
+                
+            print(f"  [⏩ Skipping fallback {next_model} (no API key)]")
 
     def reset_fallback(self):
         self._fallback_index = 0
