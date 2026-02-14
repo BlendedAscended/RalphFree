@@ -960,7 +960,7 @@ def compress_context(messages):
         summary_parts.append(f"Searches: {'; '.join(searches_done)}")
 
     if summary_parts:
-        compressed.insert(2, {
+        compressed.insert(0, {
             'role': 'user',
             'content': "[CONTEXT SUMMARY — earlier results compressed]\n" + '\n'.join(summary_parts)
         })
@@ -1462,14 +1462,19 @@ class RalphFreeLoop:
     # ─────────────────────────────────────────────
     # Interactive Chat Mode
     # ─────────────────────────────────────────────
-    def run_interactive(self, model_name=None):
+    def run_interactive(self, model_name=None, max_turns_override=None):
         """Interactive REPL mode with persistent conversation."""
         active_model = model_name or self.selector.current
         self.selector.select(active_model)
         cost_cfg = self.selector.get_cost(active_model)
 
+        # Determine effective turns limit per message for chat
+        chat_limit = MAX_CHAT_TURNS_PER_MSG
+        if max_turns_override is not None:
+             chat_limit = max_turns_override if max_turns_override > 0 else 999999
+
         print(f"  [📋 Indexing project...]")
-        system_prompt = build_system_prompt(active_model, MAX_CHAT_TURNS_PER_MSG, chat_mode=True)
+        system_prompt = build_system_prompt(active_model, chat_limit, chat_mode=True)
         ralph_md = load_ralphfree_md(WORKING_DIR)
         if ralph_md:
             print(f"  [📖 Found RALPHFREE.md]")
@@ -1482,6 +1487,7 @@ class RalphFreeLoop:
         print(f"\n{'='*55}")
         print(f"  RALPHFREE CHAT v1.0 — Interactive Mode")
         print(f"  Model: {active_model} | Temp: {self.selector.get_temperature(active_model)}")
+        print(f"  Turns per msg: {'∞' if chat_limit > 10000 else chat_limit}")
         print(f"  Commands: /exit /clear /help /save /model /models /cost /benchmark /metrics")
         print(f"{'='*55}\n")
 
@@ -1566,7 +1572,7 @@ class RalphFreeLoop:
                 messages = [messages[0]] + compress_context(messages[1:])
 
             msg_turns = 0
-            for turn in range(MAX_CHAT_TURNS_PER_MSG):
+            for turn in range(chat_limit):
                 message, usage, error = call_llm(self.selector, messages, tools=TOOLS, model_name=active_model)
                 if error:
                     print(f"  [❌ API error: {error[:100]}]")
@@ -1751,7 +1757,7 @@ def main():
         sys.exit(0)
 
     if chat:
-        agent.run_interactive(model_name=model)
+        agent.run_interactive(model_name=model, max_turns_override=max_turns)
         sys.exit(0)
 
     if not prompt:
