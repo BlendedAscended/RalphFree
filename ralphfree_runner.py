@@ -1716,13 +1716,21 @@ def main():
             benchmark = True
             i += 1
             continue
-        elif arg == '--max-turns':
-            val = args[i+1]
-            if val == 'inf':
-                max_turns = float('inf')
+        elif arg == '--max-turns' or arg == '-t' or arg == '--turns':
+            if i + 1 < len(args):
+                val = args[i+1]
+                if val == 'inf':
+                    max_turns = float('inf')
+                else:
+                    try:
+                        max_turns = int(val)
+                    except ValueError:
+                        print(f"Error: Invalid max-turns value: {val}")
+                        sys.exit(1)
+                i += 2
             else:
-                max_turns = int(val)
-            i += 2
+                print("Error: --max-turns requires a value")
+                sys.exit(1)
             continue
         elif not arg.startswith('-'):
             if prompt:
