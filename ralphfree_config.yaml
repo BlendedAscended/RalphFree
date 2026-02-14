@@ -1,0 +1,65 @@
+# RalphFree Configuration File v1.0
+# Multi-model agent with dynamic model selection, fallback, and intelligence upgrades
+
+# ─── Primary Provider (Claude CLI) ───
+providers:
+  primary:
+    name: claude_pro
+    type: claude_cli
+    daily_limit: 100
+    priority: 1
+
+# ─── Agent Settings ───
+agent:
+  temperature: 0.3           # Lower = more deterministic
+  max_turns: 20              # Max turns per run (can override with --max-turns)
+  compress_after: 10         # Compress context to save tokens
+  chat_turns_per_msg: 15     # Max turns per chat interaction
+  enable_reflection: true    # Enable Plan → Execute → Reflect loop
+  smart_routing: true        # Use reasoning models for complex tasks
+  
+  # Safety Caps for Indefinite Runs
+  max_session_tokens: 1000000
+  max_session_cost: 1.0      # USD limit stop
+  stop_phrase: "TASK COMPLETE"
+
+# ─── Model Registry ───
+models:
+  deepseek-chat:
+    litellm_model: "deepseek/deepseek-chat"
+    api_key_env: DEEPSEEK_API_KEY
+    api_base: "https://api.deepseek.com"
+    temperature: 0.3
+    cost: {input_per_1k: 0.00028, output_per_1k: 0.00042}
+    strengths: [code, editing, agentic]
+    description: "DeepSeek V3 — best value for code"
+
+  deepseek-reasoner:
+    litellm_model: "deepseek/deepseek-reasoner"
+    api_key_env: DEEPSEEK_API_KEY
+    api_base: "https://api.deepseek.com"
+    temperature: 0.1
+    cost: {input_per_1k: 0.00055, output_per_1k: 0.002}
+    strengths: [reasoning, planning, complex-tasks]
+    description: "DeepSeek R1 — deep reasoning"
+
+  gpt-4o-mini:
+    litellm_model: "gpt-4o-mini"
+    api_key_env: OPENAI_API_KEY
+    cost: {input_per_1k: 0.00015, output_per_1k: 0.0006}
+    strengths: [fast, cheap]
+    description: "GPT-4o Mini — fast & cheap"
+
+  llama-3.3-70b:
+    litellm_model: "groq/llama-3.3-70b-versatile"
+    api_key_env: GROQ_API_KEY
+    cost: {input_per_1k: 0.00059, output_per_1k: 0.00079}
+    strengths: [fast, open-source]
+    description: "Llama 3.3 70B via Groq — blazing fast"
+
+# ─── Fallback Chain ───
+default_model: deepseek-chat
+fallback_chain:
+  - deepseek-chat
+  - gpt-4o-mini
+  - llama-3.3-70b
