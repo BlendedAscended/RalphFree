@@ -57,6 +57,14 @@ models:
     strengths: [fast, open-source]
     description: "Llama 3.3 70B via Groq — blazing fast"
 
+  moonshot:
+    litellm_model: "openai/moonshotai/kimi-k2.5"  # Replace "moonshot" with the exact string from your Nvidia snippet if different
+    api_key_env: OPENAI_API_KEY
+    api_base: "https://integrate.api.nvidia.com/v1"
+    cost: {input_per_1k: 0.0, output_per_1k: 0.0}
+    strengths: [agentic, free]
+    description: "Moonshot Kimi K2.5 via Nvidia NIM"
+
 # ─── Fallback Chain ───
 default_model: deepseek-chat
 fallback_chain:

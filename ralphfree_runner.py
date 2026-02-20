@@ -1113,7 +1113,7 @@ class RalphFreeLoop:
         global MAX_AGENT_TURNS, COMPRESS_AFTER_TURN, MAX_CHAT_TURNS_PER_MSG, DEFAULT_TEMPERATURE
         MAX_AGENT_TURNS = agent_cfg.get('max_turns', 20)
         COMPRESS_AFTER_TURN = agent_cfg.get('compress_after', 10)
-        MAX_CHAT_TURNS_PER_MSG = agent_cfg.get('chat_turns_per_msg', 15)
+        MAX_CHAT_TURNS_PER_MSG = agent_cfg.get('chat_turns_per_msg', 50)
         DEFAULT_TEMPERATURE = agent_cfg.get('temperature', 0.3)
         self.enable_reflection = agent_cfg.get('enable_reflection', True)
         self.max_session_tokens = agent_cfg.get('max_session_tokens', 1000000)
@@ -1617,13 +1617,14 @@ class RalphFreeLoop:
                             'role': 'tool', 'tool_call_id': tc.id,
                             'content': str(result)[:8000]
                         })
-                    turn_count += 1
                     msg_turns += 1
-                    print(f"  [turn {msg_turns}/{MAX_CHAT_TURNS_PER_MSG}] tokens: {turn_tokens}")
-                    if msg_turns == 10:
+                    limit_display = "∞" if chat_limit > 10000 else chat_limit
+                    print(f"  [turn {msg_turns}/{limit_display}] tokens: {turn_tokens}")
+                    
+                    if chat_limit <= 10000 and msg_turns == chat_limit - 10:
                         messages.append({
                             'role': 'user',
-                            'content': '⚠ You have used 10 turns. Finish your current task and respond with a summary.'
+                            'content': f'⚠ You use {msg_turns} turns. You have {chat_limit - msg_turns} left. Finish up.'
                         })
                 else:
                     content = message.content or ''
