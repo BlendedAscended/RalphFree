@@ -1046,7 +1046,8 @@ Do NOT start editing until you have a clear plan.
 3. Files you've already read are cached — re-reading returns "[CACHED]".
 4. PRIORITIZE: source code > config > scripts. Skip docs/READMEs unless asked.
 5. Indefinite Running Mode: When task is fully done, END with the exact phrase: "{stop_phrase_instr}"
-6. Always respond in English.{chat_rules}"""
+6. Always respond in English.
+7. RESTRICTED CONTEXT: You are strictly forbidden from reading files unless they are explicitly listed in the SPEC.md blueprint. Do not explore the codebase. Only edit what is planned.{chat_rules}"""
 
 
 # ─────────────────────────────────────────────
@@ -1232,6 +1233,18 @@ class RalphFreeLoop:
             if plan_msg:
                 plan_content = plan_msg.content
                 print(f"  [📝 Plan drafted] {plan_content[:100]}...")
+                
+                # ENHANCEMENT 1: Physical Architect Blueprint
+                spec_path = os.path.join(WORKING_DIR, 'SPEC.md')
+                try:
+                    with open(spec_path, 'w') as f:
+                        f.write(plan_content)
+                    print(f"  [📄 Plan saved to SPEC.md]")
+                    
+                    # Instruct executor to strictly consume SPEC.md
+                    prompt += "\n\nCRITICAL INSTRUCTION: Read SPEC.md, implement the first unchecked step, check it off using the edit_file tool, and repeat until all steps are complete."
+                except Exception as e:
+                    print(f"  [⚠ Could not save SPEC.md: {e}]")
 
         system_prompt = build_system_prompt(model_name, limit_turns)
 
@@ -1664,6 +1677,44 @@ class RalphFreeLoop:
 
 
 # ─────────────────────────────────────────────
+# Worktree Automation Helpers
+# ─────────────────────────────────────────────
+def setup_worktree(task_name):
+    """Creates a git worktree for isolated execution."""
+    worktree_path = os.path.join(WORKING_DIR, '.dmux', 'worktrees', task_name)
+    try:
+        # Check if git is initialized
+        subprocess.run(['git', 'status'], cwd=WORKING_DIR, check=True, capture_output=True)
+        # Create worktree
+        print(f"  [🌿 Creating isolated git worktree: {task_name}]")
+        subprocess.run(['git', 'worktree', 'add', '-B', task_name, worktree_path], cwd=WORKING_DIR, check=True, capture_output=True)
+        return worktree_path
+    except subprocess.CalledProcessError as e:
+        print(f"  [⚠ Failed to setup worktree: {e.stderr.decode() if e.stderr else str(e)}]")
+        return None
+    except Exception as e:
+        print(f"  [⚠ Git worktree setup error: {e}]")
+        return None
+
+def merge_and_cleanup_worktree(task_name, worktree_dir):
+    """Commits, merges, and cleans up the worktree."""
+    print(f"  [🧹 Cleaning up and merging isolated worktree: {task_name}]")
+    try:
+        # Commit any changes in the worktree
+        subprocess.run(['git', 'add', '.'], cwd=worktree_dir, check=True, capture_output=True)
+        # We allow empty commits to not fail if the agent did nothing
+        subprocess.run(['git', 'commit', '-am', f"Auto-commit from isolated task {task_name}"], cwd=worktree_dir, capture_output=True)
+        
+        # Switch to root directory to perform the merge
+        subprocess.run(['git', 'merge', task_name, '--squash'], cwd=WORKING_DIR, capture_output=True)
+        # Remove the worktree
+        subprocess.run(['git', 'worktree', 'remove', '-f', worktree_dir], cwd=WORKING_DIR, check=True, capture_output=True)
+        subprocess.run(['git', 'branch', '-D', task_name], cwd=WORKING_DIR, capture_output=True)
+        print(f"  [✅ Successfully merged and cleaned up {task_name}]")
+    except Exception as e:
+        print(f"  [⚠ Merge/cleanup error for {task_name}: {e}]")
+        
+# ─────────────────────────────────────────────
 # Main Entry Point
 # ─────────────────────────────────────────────
 def main():
@@ -1677,6 +1728,7 @@ def main():
     model = None
     simple = False
     chat = False
+    isolate = False
     continue_mode = False
     deepseek = False
     show_models = False
@@ -1699,6 +1751,10 @@ def main():
             continue
         elif arg == '--continue':
             continue_mode = True
+            i += 1
+            continue
+        elif arg == '--isolate':
+            isolate = True
             i += 1
             continue
         elif arg == '--chat':
@@ -1776,7 +1832,19 @@ def main():
             print("Error: No prompt provided. Use 'ralphfree --help'")
             sys.exit(1)
 
+    worktree_dir = None
+    task_name = f"isolated-task-{int(time.time())}"
+    global WORKING_DIR
+    original_working_dir = WORKING_DIR
+    
     try:
+        if isolate:
+            worktree_dir = setup_worktree(task_name)
+            if worktree_dir:
+                os.chdir(worktree_dir)
+                WORKING_DIR = worktree_dir
+                print(f"  [🔒 Running isolated in {worktree_dir}]")
+
         result = None
         if simple:
             result, _, _, _ = agent.execute_simple(prompt, model_name=model)
@@ -1791,6 +1859,11 @@ def main():
         print(f"\n[ERROR] {e}")
         # traceback.print_exc()
         sys.exit(1)
+    finally:
+        if isolate and worktree_dir:
+            os.chdir(original_working_dir)
+            WORKING_DIR = original_working_dir
+            merge_and_cleanup_worktree(task_name, worktree_dir)
 
 if __name__ == "__main__":
     main()

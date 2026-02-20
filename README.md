@@ -52,3 +52,35 @@ RalphFree is a powerful, multi-model AI coding agent designed to autonomously pl
 ## Configuration
 
 Edit `ralphfree_config.yaml` to customize models, costs, and agent behavior.
+
+## OpenCode Integration
+
+RalphFree can be integrated directly into [OpenCode AI](https://opencode.ai/) to combine OpenCode's UI/IDE ecosystem with RalphFree's strict Cognitive Planning Loop.
+
+Add the following to your `~/.config/opencode/opencode.json` commands block:
+
+```json
+{
+  "commands": {
+    "ralph": {
+      "description": "Invoke the RalphFree agentic engine for deep, isolated, complex multi-file planning and reasoning tasks instead of using native OpenCode execution.",
+      "template": "Running RalphFree Engine with isolated planning and execution blocks:\n\n!ralphfree $ARGUMENTS\n\nPlease interpret the success/failure of the engine based on the printed logs above."
+    },
+    "ralph_isolated": {
+      "description": "Invoke the RalphFree agentic engine securely using Git Worktree Isolation (no side-effects if unmerged).",
+      "template": "Running RalphFree in an isolated Git Worktree:\n\n!ralphfree --isolate $ARGUMENTS\n\nPlease summarize the output of the isolated git task."
+    }
+  }
+}
+```
+
+Now you can run `/ralph "complex refactor"` within OpenCode to trigger the deep-thinking local worker!
+
+### Running Loops with Specific Models
+If you want to force RalphFree to use a specific AI provider for the execution loop (like Z.ai, DeepSeek, or Kimi), you can pass the `--model` flag directly into your OpenCode chat prompt:
+
+* **Z.ai (GLM-4):** `/ralph --model glm-4 "Build a new auth module"`
+* **DeepSeek V3:** `/ralph --model deepseek-chat "Refactor the database schema"`
+* **Nvidia NIM (Kimi):** `/ralph --model moonshot "Write a python script to scrape data"`
+
+*(Ensure these models are defined in your `ralphfree_config.yaml` file first!)*
