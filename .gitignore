@@ -44,3 +44,8 @@ ENV/
 .ralphfree_metrics.json
 .ralphfree_cache.db
 ralphfree_part2.py
+.DS_Store
+*.backup
+*.pyc
+*.pyo
+.claude/fix-journal.jsonl
