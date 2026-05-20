@@ -520,6 +520,34 @@ Apply `docs/ai/CODE-STANDARDS.md`. That file is the source of truth for:
 
 ---
 
+
+
+---
+
+## Memory Layer
+
+Three-tier memory model. All layers are additive. L0 is never modified or trimmed by this section.
+
+**L0 — existing CLAUDE.md auto-load (~15.6K words).** Unchanged. Rules + identity + project registry. Source of truth. Stays as-is.
+
+**L1 — `mempalace wake-up` on session start (~789 tokens).** Returns essential context from the top rooms of the current project's wing. Already installed. Add invocation to every session opener for OpenCode, Hermes, and Codex.
+
+**L2 — on-demand queries (zero token cost until invoked).** Surface via MCP or CLI from any tool:
+- `mempalace search "..."` for decision and conversation recall
+- `graphify query "..."` for code structure questions
+- `graphify path A B` for dependency traces
+
+When to use which:
+- Decision recall, past rationale, conversation search → `mempalace search`
+- Code structure, call graphs, community clusters → `graphify query`
+- Bidirectional: any tool can write a decision via `mempalace hook`, any tool can read it next session
+
+Session start protocol: run `mempalace wake-up` before accepting task instructions. If the tool has MCP access, use the MCP tools directly. If not, use CLI.
+
+---
+
+<!-- universal -->
+
 ---
 
 ## Maintenance
