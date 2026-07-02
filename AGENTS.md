@@ -36,6 +36,16 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 
 Applies to ALL tools (OpenCode, Claude Code, Hermes, Codex, Copilot, Gemini). No exceptions.
 
+**MANDATORY: Read-then-prepend protocol.** Before writing `CHANGES.md`:
+1. ALWAYS read the entire file first to get existing content.
+2. Prepend your new entry at the very top, above all older entries.
+3. Use `write_file` with the full combined content (new entry + all existing content).
+4. NEVER use `write_file` with only your new entry — this destroys history.
+5. The file grows indefinitely. Do not truncate, summarize, or prune it.
+6. If the file exceeds 200 lines, still prepend — do not compact. A separate compact summary may be generated for agent context, but the full `CHANGES.md` is append-only.
+
+This prevents the observed failure where OpenCode (kimi-k2.6) replaced the entire file with a single entry, destroying all prior history.
+
 ---
 
 <!-- universal -->
@@ -84,7 +94,7 @@ San runs multiple AI tools simultaneously. Before editing ANY file:
 ## Who I Am
 
 **Name:** San Ghotra  
-**Company:** VerbaFlow LLC (founder)  
+**Company:** Veldon Lab (founder)  
 **Role:** Full-stack builder — AI agents, browser extensions, healthcare tech, community platforms  
 **Focus:** Building AI-augmented tools that compound in value over time  
 **Style:** Direct, no fluff, terminal-first, ship fast, automate ruthlessly  
@@ -106,7 +116,7 @@ San runs multiple AI tools simultaneously. Before editing ANY file:
 | [[Samurai]] | Browser extension + Discord bot — vision analysis, MCP server | Building |
 | [[Galaxy]] | Multi-agent AI platform — OpenClaw, n8n, Prometheus | Building |
 | [[PriorZap]] | Real-time healthcare denial prevention at point of care | Building |
-| [[VerbaFlow-2.0]] | Company website — Next.js 15, Sanity, Spline 3D | Building |
+| [[Veldon Lab-2.0]] | Company website — Next.js 15, Sanity, Spline 3D | Building |
 | [[MLLC]] | Nonprofit foundation — WordPress + Preact admin portal | Phase 5 |
 
 ### Medium Priority
@@ -193,6 +203,7 @@ Vault Root
 |---|------|----------|
 | R11 | **Hard token budgets.** Per-task: 4,000 tokens. Per-session: 30,000 tokens. Summarize and start fresh when approaching the limit. Surface the breach. | Agent spirals, 90-minute loops |
 | R12 | **Checkpoint every significant step.** Summarize what was done, what's verified, what's left. Don't continue from a state you can't describe back. If you lose track, stop and restate. | Multi-step refactors losing state |
+| R13 | **Drain the backlog before closing.** Before ending any session: scan for features, ideas, or changes discussed but not implemented. Write each one to `BACKLOG.md` in the project root (create if absent). Format: `- [ ] [YYYY-MM-DD] [tool] Item — one-line context`. Never let a discussed idea die in session context. | Ideas discussed in one session, never surfaced again |
 
 ### Exceptions
 - **Prototypes / spikes:** R3 and R9 are relaxed — speculative code and shallow tests are acceptable.
@@ -292,6 +303,17 @@ Each active repo gets hooks via `setup.sh hooks`. Hook scripts in `ai-config-tra
 
 | Tool | Lane | Model |
 |---|---|---|
+| OpenCode | Daily coding | Kimi K2.5 (Go), MiniMax M2.7 fallback |
+| OpenClaw | Orchestration, scheduling, HITL gate | pm-san: Qwen 3.6 Plus (2h), design-lead: Qwen 3.6 Plus (4h), daemon: GLM 5.1 (6h) |
+| Claude Code | Hard refactors, architecture, complex debugging | Opus 4.6 (escalation only) |
+| Hermes | Knowledge compounding, cron automation | DeepSeek V3 default, GLM 5.1 cached reads |
+| Codex | Extended coding sessions, sandboxing | OpenAI models (subscription) |
+| VS Code Copilot | Inline assist | GitHub Copilot |
+| Gemini CLI | Supplementary, large context | Gemini models |
+
+Cross-tool config:
+| Tool | Lane | Model |
+|---|---|---|
 | OpenCode | Daily coding | Kimi K2.6 (Go), MiniMax M2.7 fallback |
 | Claude Code | Hard refactors, escalation | Opus 4.6 (escalation only) |
 | Codex | Extended sessions, sandboxing | OpenAI models (subscription) |
@@ -308,10 +330,43 @@ All 7 tools share configs via symlinks. Single source of truth paths:
 - **Instructions:** `~/Documents/Obsidian Vault/CLAUDE.md` (this file) propagated to all tools
 - **Skills:** `~/.config/opencode/skills/` → symlinked to `~/.claude/skills/`, `~/.hermes/skills/*`, `~/.codex/skills/*`
 - **MCP servers:** Must be added to ALL 3 configs: `opencode.json`, `~/.claude/settings.json`, `~/.hermes/config.yaml`
-- **Git hooks:** All repos symlink `.git/hooks/` → `~/Desktop/Project26/ai-config-transfer/hooks/git/`
+- **Git hooks:** All repos symlink `.git/hooks/` → `~/Projects/Project26/ai-config-transfer/hooks/git/`
 - **Cross-tool rules:** `~/.claude/context/cross-tool-rules.md` — changelog, WORKING.lock, formatting, verification, git safety
 
 When updating this file, the sync script (`~/.hermes/scripts/sync-rules.py`) propagates changes to all derived files. If you edit a derived file directly, the script merges NEW content back into this file.
+
+### MCP Servers
+
+All AI tools share the same MCP server set. If you add a new MCP server, add it to ALL tool configs:
+- **OpenCode**: `~/.config/opencode/opencode.json` → `mcp` key (command as array)
+- **Claude Code**: `~/.claude/settings.json` → `mcpServers` key (command + args)
+- **Hermes**: `~/.hermes/config.yaml` → `mcp_servers` key (command + args in YAML)
+- **Codex**: No MCP support (uses project-level AGENTS.md symlinked to `~/.claude/CLAUDE.md`)
+
+Current shared MCP servers:
+| Server | Command | Purpose |
+|--------|---------|---------|
+| mempalace | `mempalace-mcp` | Persistent memory palace (knowledge graph) |
+| fetch | `npx -y @modelcontextprotocol/server-fetch` | HTTP fetch/web scraping |
+| filesystem | `npx -y @modelcontextprotocol/server-filesystem` | Filesystem access (Agents + Obsidian) |
+| git | `npx -y @modelcontextprotocol/server-git` | Git operations |
+| time | `npx -y @modelcontextprotocol/server-time` | Time/timezone utilities |
+
+### AI Provider Aliases
+
+```
+alias deepseek="export DEEPSEEK_API_KEY=sk-b1a7a..."
+alias qwen="export DASHSCOPE_API_KEY=sk-5e80..."
+alias openai="export OPENAI_API_KEY=sk-proj-aT..."
+```
+
+API keys set via shell aliases. See `~/.bashrc` for full definitions.
+
+### oMLX Serving
+
+Local inference at `127.0.0.1:8087`, API key: `mlx`. Max 20GB RAM per model.
+One large model at a time (24GB total). Loaded: qwen2.5-14b (default), qwen3-30b (for heavy analysis, needs `/no_think` in system prompt, 24GB). Fallback: deepseek-chat, kimi-k2.5.
+Commands: `ollama list` (loaded), `mlx_lm.server --model ... --port 8087`.
 
 ---
 
@@ -340,7 +395,7 @@ Apply only rules relevant to the active task. No scope bleed.
 | Task type | Load |
 |---|---|
 | Engineering (code, schema, infra) | `docs/ai/CODE-STANDARDS.md` + engineering section of `sandeep-universal-style` |
-| Design and frontend | `verbaflow-design-system`, `frontend-blueprint`, `design-director` |
+| Design and frontend | `veldonlab-design-system`, `frontend-blueprint`, `design-director` |
 | Career and pitches | Domain skill (`aiml` / `tech` / `health` / `finance` / `cloud`) + `resume-alignment` / `intro-interview` |
 | Content and outreach | `opt-email`, `referral`, voice section of `sandeep-universal-style` |
 | Data, Supabase, infra | Supabase MCP, `data:*` skills, AWS MCP |
@@ -377,13 +432,16 @@ Load without being asked.
 | `.pdf` creation, merging | `pdf` |
 | Figma URL + design task | `design-director` |
 | "capture design from URL" | `capture-design` |
-| "which matrix" / VerbaFlow design | `verbaflow-design-system` |
+| "which matrix" / Veldon Lab design | `veldonlab-design-system` |
 | Domain pitch (aiml / tech / health / finance / cloud) | Matching domain skill |
 | `/opt-email` / "polish this email" | `opt-email` |
 | `/referral` / "write a referral letter" | `referral` |
 | "OPT compliant" / F-1 STEM OPT question | `opt-compliant` |
 | Multiple agents / concurrent editing / "another terminal" | `agent-coordination` |
+| "brainstorm" / "what are our options" / before multi-day build | `brainstorming` |
+| "finish this" / "wrap up branch" / "ready to commit" | `finish-branch` |
 | `/graphify` | `graphify` |
+| Any 127.0.0.1:3456 gateway error / routing 500/502/ConnectionRefused / OpenCode key 429-401 / model invalid after update / Claude or Hermes routing broken | `ai-routing-doctor` |
 
 ---
 
@@ -399,13 +457,13 @@ Load without being asked.
 
 **Decision logging:** Significant architectural/strategic decisions → `~/.claude/memory/decisions.md` with date and one-line rationale.
 
-**Consolidation trigger:** Run `consolidate-memory` when 5+ new facts accumulate or any topic file has stale dates.
+**Consolidation trigger:** Run `consolidate-memory` when 5+ new facts accumulate or any topic file has stale dates. Generate a volatile `hot.md` at the end of every session containing the immediate working context. Read this first on the next session start.
 
 **Index rule:** `MEMORY.md` stays under 200 lines. Format: `- [Title](file.md) — one-line hook`.
 
 ---
 
----
+<!-- universal -->
 
 ## Changelog Rule
 
@@ -421,10 +479,10 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 
 | Trigger | Automatic Action |
 |---|---|
-| Edit `.php` file | Run `php -l` on the file before declaring done |
-| Edit `.jsx`/`.js` file | Check bracket balance `()[]{}` on modified files |
-| Edit JS/JSX in Vite project | Run `npm run build` before declaring done |
-| Edit component with `return` statement | Verify it does not return `null` without placeholder |
+| Edit `functions.php` or any `.php` file | Run `php -l` on the file before declaring done |
+| Edit any `.jsx` or `.js` file | Run bracket balance check `()[]{}` on modified files |
+| Edit JS/JSX in a Vite project | Run `npm run build` before declaring done |
+| Edit component with `return` statement | Verify it does not return `null` without placeholder (if project rule exists) |
 
 ### State Safety (Auto-Check During Edits)
 
@@ -432,15 +490,16 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 |---|---|
 | Edit auth state file | Scan for new `useState` additions near auth logic; flag fragmentation |
 | Edit save/mutation flow | Verify success callback is NOT inside catch block |
-| Edit settings mutation | Verify hash/token gets updated after mutation |
+| Edit settings mutation | Verify hash/token gets updated after mutation (if project uses optimistic locking) |
 | Add new REST endpoint | Verify permission callback is strict (not `__return_true`) |
+| Add new admin module | Verify it appears in any required registry/map (if project has one) |
 
 ### Convention Enforcement (Auto-Check)
 
 | Trigger | Automatic Action |
 |---|---|
 | Edit JSX in Preact project | Verify `class` not `className`, `h()` not `React.createElement` |
-| Add new route | Verify route is wrapped in error boundary |
+| Add new route | Verify route is wrapped in error boundary (if project rule exists) |
 | Add user-visible text | Check if bilingual/i18n variant needed |
 | Add image/media field | Verify it uses project's asset resolver function |
 
@@ -448,7 +507,7 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 
 | Trigger | Automatic Action |
 |---|---|
-| Any user-facing change | Append entry to `CHANGES.md` before declaring done |
+| Any user-facing change | Append entry to `CHANGES.md` (or project's changelog) before declaring done |
 | Remove dead code/fields | Update field map/reference docs if they exist |
 | Fix a bug from known-issues list | Mark issue as resolved with date |
 
@@ -456,9 +515,9 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 
 | Trigger | Automatic Action |
 |---|---|
-| Uncommitted changes at session start | Warn user and suggest stash or commit |
-| Edit creates merge conflict markers | Stop immediately and ask user |
-| About to `git commit` | Verify no secrets (`.env`, credentials) are staged |
+| Uncommitted changes exist at session start | Warn user and suggest stash or commit before editing |
+| Edit creates merge conflict markers | Stop immediately and ask user; never auto-resolve |
+| About to run `git commit` | Verify no secrets (`.env`, credentials) are staged |
 
 ---
 
@@ -548,13 +607,109 @@ Session start protocol: run `mempalace wake-up` before accepting task instructio
 
 <!-- universal -->
 
+
+
+---
+
+## Instruction Hierarchy
+
+1. **Vault `CLAUDE.md`** — `~/Documents/Obsidian Vault/CLAUDE.md` — READ FIRST. Identity, behavioral contract (12 rules), safety rules, formatting hard stops, agent coordination protocol. Single authoritative source for ALL AI tools.
+2. This file — Global config for ALL AI tools (Claude Code, OpenCode, Gemini CLI, Hermes, Codex, Copilot)
+3. `~/.claude/CLAUDE.local.md` — device-specific overrides, never committed
+4. `instructions` loaded from `~/.config/opencode/opencode.json` (OpenCode)
+5. Repo local `AGENTS.md` — project-specific overrides when present
+6. Repo local `CLAUDE.md` — project-specific overrides (fallback)
+7. `docs/ai/CODE-STANDARDS.md` — engineering tasks only
+8. `~/.claude/memory/MEMORY.md` — living session context, read at start
+9. Task specific skill files loaded on demand
+
+Context imports (load on session start):
+@~/.claude/context/projects.md
+@~/.claude/context/engineering.md
+@~/.claude/context/pipelines.md
+@~/.claude/context/business.md
+
+---
+
+<!-- universal -->
+
+---
+
+---
+
+## Cross-Tool Context Sharing
+
+Shared files (one edit propagates to all):
+- `~/.claude/CLAUDE.md` — master control plane. OpenCode reads via `opencode.json` relative path.
+- `~/.claude/context/` — project registry, engineering, pipelines, business context
+- `~/.claude/memory/` — session memory, learned conventions, decisions
+- `~/.claude/skills/` — symlinked to `~/.config/opencode/skills/`
+
+Derived files (core + tool-specific tails, synced by script):
+- `~/.config/opencode/AGENTS.md` — core + `tails/opencode.md` (Agent Modes, Ralph Commands, Skill Activation)
+- `~/.gemini/GEMINI.md` — core + `tails/gemini.md` (Gemini-specific MCP config)
+- `.github/copilot-instructions.md` — per repo, from global AGENTS.md + project context
+
+Canonical shared files:
+- `~/Documents/Obsidian Vault/CLAUDE.md` — vault instruction layer (identity + 12-rule behavioral contract + safety + agent protocol)
+- `~/.claude/CLAUDE.md` — master control plane (stack, memory, triggers, scope routing)
+- `~/.claude/context/` — project registry, engineering, pipelines, business
+- `~/.claude/skills/` — skill files (symlinked to `~/.config/opencode/skills/`)
+- `~/.config/opencode/AGENTS.md` — OpenCode rule file (core + OpenCode-specific tail)
+- `~/.codex/AGENTS.md` — Codex instructions (symlinked to `~/.claude/CLAUDE.md`)
+- `~/.hermes/skills/` — Hermes skills (15 shared skills symlinked from `~/.config/opencode/skills/`)
+- `~/.codex/skills/` — Codex skills (15 shared skills symlinked from `~/.config/opencode/skills/`)
+
+Skill symlink chain: `~/.claude/skills` → `~/.config/opencode/skills` → `~/.hermes/skills/*` + `~/.codex/skills/*`
+
+Git hooks (agent coordination): All repos with `.git` should have symlinks in `.git/hooks/` pointing to `~/Projects/Project26/ai-config-transfer/hooks/git/` (pre-commit, commit-msg, pre-push).
+
+---
+
+<!-- universal -->
+
+---
+
+---
+
+## Second Brain
+
+Vault: `~/Documents/Obsidian Vault` (`OBSIDIAN_VAULT_PATH` env var).
+Read `CLAUDE.md` at vault root before any vault operation. It contains identity, 12-rule behavioral contract, 16 active projects, formatting hard stops, safety rules, and agent coordination protocol.
+Key automated workflows: Daily Brief (weekday 6am → `Inbox/`), Weekly Synthesis (Mon 8am → `Outputs/LLM/`).
+Hermes has full vault access. Other tools read vault via CLAUDE.md.
+Hermes handles automated workflows (Daily Brief, Weekly Synthesis). All tools read/write vault for cross-tool persistence.
+File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
+
+---
+
+---
+
+---
+
+---
+
+## Code Style
+
+- Python: snake_case, UPPER_SNAKE constants, PascalCase classes.
+- JS/TS: camelCase vars/functions, PascalCase components.
+- Comments explain WHY, not WHAT.
+- Error handling explicit. Never swallow errors silently.
+- Infrastructure: Docker Compose, Hetzner VPS, Cloudflare Tunnels, Supabase, n8n, DeepSeek V3.
+
+---
+
+---
+
 ---
 
 ## Maintenance
 
-- **This file:** Version-bump and re-date when project registry, scope, or core rules change. The sync script propagates to all derived files.
+- **This file:** Version-bump and re-date when project registry, scope, or core rules change. The sync script propagates core sections to all derived files, appending tool-specific tails.
 - **Rules:** Weekly Synthesis reviews rule effectiveness. Drop any rule unused for 4 weeks.
 - **Style corrections:** Log to `~/.claude/memory/style-corrections.md`. Map to `sandeep-universal-style` skill.
 - **Decision logging:** Significant decisions → `~/.claude/memory/decisions.md` with date and one-line rationale.
 - **Memory:** Run consolidation when 5+ new facts accumulate or any topic file has stale dates.
-- **Derived files sync:** When this file changes, run `python3 ~/.hermes/scripts/sync-rules.py` or wait for the 6-hour Hermes cron to propagate.
+- **Derived files sync:** When this file changes, run `python3 ~/.hermes/scripts/sync-rules.py` or wait for the 6-hour Hermes cron to propagate. Tool-specific tails live in `~/.hermes/scripts/tails/`.
+
+---
