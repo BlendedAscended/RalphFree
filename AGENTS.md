@@ -476,6 +476,13 @@ After any code change, feature, bug fix, or architecture update, you MUST:
 2. Add a new entry at the very top using this format:
 
 ```
+## YYYY-MM-DD HH:MM (UTC) - one-line summary
+
+**Changes:**
+- What changed
+- Key files modified / created / deleted
+- Breaking changes, migration notes, client impact
+```
 
 ---
 
