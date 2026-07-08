@@ -303,26 +303,36 @@ Each active repo gets hooks via `setup.sh hooks`. Hook scripts in `ai-config-tra
 
 | Tool | Lane | Model |
 |---|---|---|
-| OpenCode | Daily coding | Kimi K2.5 (Go), MiniMax M2.7 fallback |
+| OpenCode | Daily coding | Mimo V2.5 Pro (Go), MiniMax M3 fallback |
 | OpenClaw | Orchestration, scheduling, HITL gate | pm-san: Qwen 3.6 Plus (2h), design-lead: Qwen 3.6 Plus (4h), daemon: GLM 5.1 (6h) |
 | Claude Code | Hard refactors, architecture, complex debugging | Opus 4.6 (escalation only) |
-| Hermes | Knowledge compounding, cron automation | DeepSeek V3 default, GLM 5.1 cached reads |
+| Hermes | Knowledge compounding, cron automation | Mimo V2.5 Pro default, GLM 5.1 cached reads |
 | Codex | Extended coding sessions, sandboxing | OpenAI models (subscription) |
 | VS Code Copilot | Inline assist | GitHub Copilot |
-| Gemini CLI | Supplementary, large context | Gemini models |
+| Gemini CLI | Supplementary, large context. MacDaddy only; MacAttack runs Antigravity IDE | Gemini models |
 
 Cross-tool config:
 | Tool | Lane | Model |
 |---|---|---|
-| OpenCode | Daily coding | Kimi K2.6 (Go), MiniMax M2.7 fallback |
+| OpenCode | Daily coding | Mimo V2.5 Pro (Go), MiniMax M3 fallback |
 | Claude Code | Hard refactors, escalation | Opus 4.6 (escalation only) |
 | Codex | Extended sessions, sandboxing | OpenAI models (subscription) |
 | VS Code Copilot | Inline assist | GitHub Copilot |
-| Gemini CLI | Supplementary, large context | Gemini models |
-| Hermes | Knowledge compounding, cron | DeepSeek V3 default, GLM 5.1 cached |
+| Gemini CLI | Supplementary, large context. MacDaddy only; MacAttack runs Antigravity IDE | Gemini models |
+| Hermes | Knowledge compounding, cron | Mimo V2.5 Pro default, GLM 5.1 cached |
 | OpenClaw | Orchestration, HITL gate | Qwen 3.6 Plus, GLM 5.1 |
 
 Escalation: OpenCode Go → OpenCode Zen (pay-per-use) → Claude Code (Opus 4.6) → Codex.
+
+### Runtime Ownership (decided 2026-07-03)
+
+Three tiers. Full rationale in `~/.claude/memory/decisions.md`.
+
+| Tier | Rule | Examples |
+|---|---|---|
+| T1: AI CLIs | Vendor native installers only. Never `npm i -g`. | claude (native), opencode, hermes, codex (brew cask), mempalace (uv) |
+| T2: npm utility globals | One tree only: Hermes node (`~/.local/bin/node` and `npm` symlinks stay). | agnix, rulesync, pnpm, higgsfield |
+| T3: project runtimes | Homebrew node or per project pins. nvm retired (MacDaddy migration pending). | vflow2.0, samurai builds |
 
 ### Config Sync (Critical)
 
@@ -354,13 +364,7 @@ Current shared MCP servers:
 
 ### AI Provider Aliases
 
-```
-alias deepseek="export DEEPSEEK_API_KEY=sk-b1a7a..."
-alias qwen="export DASHSCOPE_API_KEY=sk-5e80..."
-alias openai="export OPENAI_API_KEY=sk-proj-aT..."
-```
-
-API keys set via shell aliases. See `~/.bashrc` for full definitions.
+Provider keys load through shell aliases named `deepseek`, `qwen`, and `openai` defined in `~/.bashrc`. The canonical secret store is OpenBao on MacDaddy (`http://100.82.2.87:8200`, paths under `secret/data/shared/providers/*`; schema in ai-config-transfer `openbao/SECRET-ROUTING.md`, helpers `secret-run` and `openbao-projects`). This file never carries key material.
 
 ### oMLX Serving
 
