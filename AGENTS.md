@@ -248,6 +248,29 @@ These apply to ALL output across ALL tools. No exceptions.
 - Apply only rules relevant to the task. No scope bleed.
 - Never commit secrets (`.env`, `credentials.json`, API keys).
 - Never auto-resolve merge conflict markers. Stop and ask.
+- Never paste secret literals (API keys, tokens, passwords) into shell command text. Pull them from OpenBao or env vars at runtime. Inline secrets trip content scanners (Hermes Tirith) and force approval prompts that cannot be allowlisted.
+
+### Deletion / Cleanup Permission Rules
+
+Interpret "do not delete without permission" as protecting durable user/project data, not temporary caches or rebuildable artifacts.
+
+Never delete user-created source files, project files, configs, credentials, databases, uploads, or production data without explicit permission.
+
+Safe cleanup actions do NOT require permission:
+- deleting build/cache folders: `.next/cache`, `.turbo`, `.vite`, `node_modules/.cache`, `.cache`
+- clearing framework cache: Next.js cache, Vercel build cache, npm/pnpm/yarn cache
+- restarting local dev servers, Docker containers, or non-production services
+- pruning stopped Docker containers/images only when they are clearly temporary and not named production data volumes
+
+Always ask permission before:
+- deleting files outside known cache/build folders
+- deleting Docker volumes
+- deleting databases, buckets, uploads, logs needed for audit, or backups
+- deleting `.env`, secrets, config files, migrations, package files, lockfiles
+- running `rm -rf` on broad paths like project root, home directory, `/var`, `/etc`, `/opt`, or VPS folders
+- changing production infrastructure, DNS, Vercel project settings, or live database state
+
+When unsure, ask. But do not ask for routine cache cleanup or service restart unless it affects production.
 
 ---
 
