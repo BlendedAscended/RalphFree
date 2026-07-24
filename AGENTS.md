@@ -283,10 +283,11 @@ When unsure, ask. But do not ask for routine cache cleanup or service restart un
 - When updating `Projects/`, add a timestamp line: `Last updated: YYYY-MM-DD`.
 - Never overwrite vault content without reading it first.
 - When exporting to `Outputs/`, include source context (which tool, which session, which prompt).
+- Skills belong in `~/Projects/Project26/ai-config-transfer/configs/skills/` first, never authored directly in `~/.config/opencode/skills/`, `~/.hermes/skills/`, `~/.codex/skills/`, or `~/.claude/skills`. Those are disposable mirrors `setup.sh` overwrites; anything written only there does not survive the next sync.
 
 ---
 
----
+<!-- universal -->
 
 ## Concurrent Agent Protocol (ALWAYS ACTIVE — AUTOMATIC)
 
@@ -465,10 +466,12 @@ Load without being asked.
 | `/referral` / "write a referral letter" | `referral` |
 | "OPT compliant" / F-1 STEM OPT question | `opt-compliant` |
 | Multiple agents / concurrent editing / "another terminal" | `agent-coordination` |
-| "brainstorm" / "what are our options" / before multi-day build | `brainstorming` |
+| "https://youtube.com" / "https://youtu.be" / "https://x.com" / YouTube/X/LinkedIn URL appears in message | `content-intel-detect` — Queue to ingest pipeline, reply with job ID, do NOT process URL yourself |
+
+
 | "finish this" / "wrap up branch" / "ready to commit" | `finish-branch` |
 | `/graphify` | `graphify` |
-| Any 127.0.0.1:3456 gateway error / routing 500/502/ConnectionRefused / OpenCode key 429-401 / model invalid after update / Claude or Hermes routing broken | `ai-routing-doctor` |
+| Hermes gateway routing failures / OpenCode key 429-401 / model invalid after update / Claude or Hermes routing broken | `ai-routing-doctor` |
 
 ---
 
@@ -494,20 +497,29 @@ Load without being asked.
 
 ## Changelog Rule
 
-After any code change, feature, bug fix, or architecture update, you MUST:
-1. Ensure `CHANGES.md` exists in the project root
-2. Add a new entry at the very top using this format:
+After any code change, feature, bug fix, or architecture update, run:
 
 ```
-## YYYY-MM-DD HH:MM (UTC) - one-line summary
-
-**Changes:**
-- What changed
-- Key files modified / created / deleted
-- Breaking changes, migration notes, client impact
+changelog-add "one-line summary" <<'EOF'
+- what changed
+- key files modified / created / deleted
+- breaking changes, migration notes, client impact
+EOF
 ```
+
+NEVER write or edit CHANGES.md directly with any file tool, under any circumstance. Direct writes are what destroyed this file before (a model rewrote it with only its own entry). `changelog-add` prepends atomically and refuses to shrink the file, so it stays safe regardless of model reliability.
+
+If `changelog-add` is not installed, write your entry to `CHANGES-pending.md` in the project root instead and say so. It merges into CHANGES.md automatically on the next `changelog-add` run.
+
+To check recent history: `head -80 CHANGES.md`. Never read the full file — it grows indefinitely by design and nothing is ever removed.
+
+Applies to ALL tools (OpenCode, Claude Code, Hermes, Codex, Copilot, Gemini). No exceptions.
+
+This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once replaced this file entirely, destroying all history, because full-file reads depend on model discipline. `changelog-add` makes that impossible instead of merely forbidding it.
 
 ---
+
+<!-- universal -->
 
 ## Verification (Auto-Run After Edits)
 
@@ -730,6 +742,24 @@ File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
 - Comments explain WHY, not WHAT.
 - Error handling explicit. Never swallow errors silently.
 - Infrastructure: Docker Compose, Hetzner VPS, Cloudflare Tunnels, Supabase, n8n, DeepSeek V3.
+
+---
+
+---
+
+
+
+---
+
+## vflow2.0 Deployment (Hetzner VPS)
+
+- **VPS:** root@46.224.38.85, source at `/mnt/HC_Volume_106173782/vflow2.0-src`
+- **Deploy script:** `./deploy.sh` in vflow2.0 repo — fetches env from OpenBao, SCPs to VPS, runs `scripts/veldon-release.sh`
+- **OpenBao access:** All `bao` calls in deploy.sh route through `ssh macdaddy` (OpenBao at localhost:8200 on MacDaddy). MacAttack firewall blocks direct outbound to 100.82.2.87:8200 over Tailscale.
+- **Quick deploy:** `bash ~/Projects/Project26/run-all-sync-deploy.sh` from any machine, or `./deploy-now.sh` from the vflow2.0 repo.
+- **deploy-now.sh:** Guards `git commit -a` with `git diff --quiet ||` to avoid `set -e` death when no tracked changes.
+- **PM2 processes:** veldonlab + wireframe-worker. Docker: infra-vflow-1.
+- **Health check:** `curl -s -o /dev/null -w "%{http_code}" https://veldonlab.com` → 200
 
 ---
 
