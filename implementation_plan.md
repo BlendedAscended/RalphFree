@@ -6,7 +6,7 @@ This plan aims to structure RalphFree for a more scalable sub-agent architecture
 
 ### RalphFree Runner (`ralphfree_runner.py`)
 
-#### [MODIFY] [ralphfree_runner.py](file:///Users/sandeep/Desktop/Project26/Agents/RalphFree/ralphfree_runner.py)
+#### [MODIFY] [ralphfree_runner.py](file:///Users/sandeep/Projects/Project26/Agents/RalphFree/ralphfree_runner.py)
 
 1. **Enhancement 1: Physical Architect Blueprint**
    - In `execute_agentic`, locate the reasoner snippet logic (around L1230). 
