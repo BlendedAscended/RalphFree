@@ -1,95 +1,5 @@
-# RalphFree
-
-## Stack
-- TBD — inspect project files to determine stack
-
-## Key Paths
-- Inspect root directory for entry points
-
-## Notes
-- Project details to be documented on first deep dive
-
-## Obsidian Vault
-
-Cross-tool knowledge base: `~/Documents/Obsidian Vault`
-- Project status: [[Projects/RalphFree]]
-- Daily notes: `Daily/YYYY-MM-DD.md`
-- Export LLM outputs: `Outputs/LLM/`
-
-
-# Cross-Tool Rules (Shared by ALL AI tools)
-
-## 1. Changelog Rule
-
-After any code change, feature, bug fix, or architecture update, you MUST:
-1. Ensure `CHANGES.md` exists in the project root
-2. Add a new entry at the very top using this format:
-
-```markdown
-## YYYY-MM-DD HH:MM (UTC) — one-line summary
-
-**Changes:**
-- What changed
-- Key files modified / created / deleted
-- Breaking changes, migration notes, client impact
-```
-
-Applies to ALL tools (OpenCode, Claude Code, Hermes, Codex, Copilot, Gemini). No exceptions.
-
-**MANDATORY: Read-then-prepend protocol.** Before writing `CHANGES.md`:
-1. ALWAYS read the entire file first to get existing content.
-2. Prepend your new entry at the very top, above all older entries.
-3. Use `write_file` with the full combined content (new entry + all existing content).
-4. NEVER use `write_file` with only your new entry — this destroys history.
-5. The file grows indefinitely. Do not truncate, summarize, or prune it.
-6. If the file exceeds 200 lines, still prepend — do not compact. A separate compact summary may be generated for agent context, but the full `CHANGES.md` is append-only.
-
-This prevents the observed failure where OpenCode (kimi-k2.6) replaced the entire file with a single entry, destroying all prior history.
-
----
-
-<!-- universal -->
-
-## 2. Agent Coordination (Concurrent Editing)
-
-San runs multiple AI tools simultaneously. Before editing ANY file:
-1. Check `{project_root}/WORKING.lock`. If it exists and is <30 min old, ask San before proceeding.
-2. Read `{project_root}/AGENT_REGISTRY.md` to see what other agents are doing.
-3. While working: write your own `WORKING.lock` with target files and expiry.
-4. When done: delete `WORKING.lock`. Mark `AGENT_REGISTRY.md` entry as `completed`.
-
-## 3. Formatting Hard Stops
-
-- No em dashes. Use colon, period, or comma.
-- No filler adverbs: "seamlessly", "effortlessly", "robustly", "leveraging", "utilizing".
-- No preamble. Lead with the deliverable.
-- Active voice only. No "it should be noted that."
-- Code: `snake_case` (Python), `camelCase` (JS/TS), `PascalCase` (React components).
-
-## 4. Verification (Auto-Run After Edits)
-
-| Trigger | Action |
-|---|---|
-| Edit `.php` | Run `php -l` on file |
-| Edit `.jsx`/`.js` | Check bracket balance |
-| Edit JS/JSX in Vite project | Run `npm run build` before done |
-| About to `git commit` | Verify no secrets staged |
-
-## 5. Skill Activation
-
-- Load `sandeep-universal-style` at conversation start.
-- Load named skills only when relevant to the task.
-- Do not bulk load every skill.
-
-## 6. Reference Files
-
-- Full rules: `~/.claude/CLAUDE.md` (150 lines, memory/scope/safety)
-- OpenCode rules: `~/.config/opencode/AGENTS.md` (135 lines)
-- Cross-tool rules: `~/.claude/context/cross-tool-rules.md`
-- Vault (single source of truth): `~/Documents/Obsidian Vault/CLAUDE.md` (306 lines)
-
-
----
+<!-- BEGIN GENERATED: rule-sync core. Do not edit. Edit the vault instead. -->
+<!-- project: RalphFree | source: vault CLAUDE.md | regenerate: agents-rebuild.py -->
 
 ## Who I Am
 
@@ -106,7 +16,7 @@ San runs multiple AI tools simultaneously. Before editing ANY file:
 
 ---
 
----
+<!-- universal -->
 
 ## Current Projects (16 active)
 
@@ -116,7 +26,7 @@ San runs multiple AI tools simultaneously. Before editing ANY file:
 | [[Samurai]] | Browser extension + Discord bot — vision analysis, MCP server | Building |
 | [[Galaxy]] | Multi-agent AI platform — OpenClaw, n8n, Prometheus | Building |
 | [[PriorZap]] | Real-time healthcare denial prevention at point of care | Building |
-| [[Veldon Lab-2.0]] | Company website — Next.js 15, Sanity, Spline 3D | Building |
+| [[VeldonLab-2.0]] | Company website — Next.js 15, Sanity, Spline 3D | Building |
 | [[MLLC]] | Nonprofit foundation — WordPress + Preact admin portal | Phase 5 |
 
 ### Medium Priority
@@ -130,7 +40,7 @@ San runs multiple AI tools simultaneously. Before editing ANY file:
 
 ---
 
----
+<!-- universal -->
 
 ## How This Vault Works
 
@@ -156,7 +66,7 @@ Vault Root
 
 ---
 
----
+<!-- universal -->
 
 ## What I Want From AI Tools
 
@@ -169,7 +79,7 @@ Vault Root
 
 ---
 
----
+<!-- universal -->
 
 ## Behavioral Contract — 12 Rules
 
@@ -202,6 +112,7 @@ Vault Root
 | # | Rule | Prevents |
 |---|------|----------|
 | R11 | **Hard token budgets.** Per-task: 4,000 tokens. Per-session: 30,000 tokens. Summarize and start fresh when approaching the limit. Surface the breach. | Agent spirals, 90-minute loops |
+| R11b | **One ticket equals one session equals one context window.** If a task cannot be finished and verified in a single session without compaction, it is not a ticket. It is a spec that has not been broken down yet. Session state goes to `{project_root}/.session/active.md`. | Work that overruns its budget invisibly, and mis-sized tickets read as expensive rather than wrong |
 | R12 | **Checkpoint every significant step.** Summarize what was done, what's verified, what's left. Don't continue from a state you can't describe back. If you lose track, stop and restate. | Multi-step refactors losing state |
 | R13 | **Drain the backlog before closing.** Before ending any session: scan for features, ideas, or changes discussed but not implemented. Write each one to `BACKLOG.md` in the project root (create if absent). Format: `- [ ] [YYYY-MM-DD] [tool] Item — one-line context`. Never let a discussed idea die in session context. | Ideas discussed in one session, never surfaced again |
 
@@ -227,7 +138,8 @@ These apply to ALL output across ALL tools. No exceptions.
 
 - No em dashes. Restructure the sentence.
 - No hyphens in compound modifiers (write "real time" not "real-time").
-- No filler adverbs: "really", "truly", "incredibly", "genuinely".
+- No filler adverbs: "really", "truly", "incredibly", "genuinely", "seamlessly",
+  "effortlessly", "robustly", "leveraging", "utilizing".
 - No bullet lists in final deliverables (emails, letters, pitch scripts) unless explicitly requested.
 - No preamble before a deliverable. Output first.
 - No post-summary after a deliverable. End at the last line.
@@ -237,7 +149,7 @@ These apply to ALL output across ALL tools. No exceptions.
 
 ---
 
----
+<!-- universal -->
 
 ## Safety Rules — Always Apply
 
@@ -249,6 +161,7 @@ These apply to ALL output across ALL tools. No exceptions.
 - Never commit secrets (`.env`, `credentials.json`, API keys).
 - Never auto-resolve merge conflict markers. Stop and ask.
 - Never paste secret literals (API keys, tokens, passwords) into shell command text. Pull them from OpenBao or env vars at runtime. Inline secrets trip content scanners (Hermes Tirith) and force approval prompts that cannot be allowlisted.
+- Before changing an access control setting, prove which key actually enforces it by inspecting the running process and its environment. A plausibly named key in a config file may be inert. (Graduated from correction ledger 2026-08-05, safety severity, 1 occurrence.)
 
 ### Deletion / Cleanup Permission Rules
 
@@ -271,10 +184,6 @@ Always ask permission before:
 - changing production infrastructure, DNS, Vercel project settings, or live database state
 
 When unsure, ask. But do not ask for routine cache cleanup or service restart unless it affects production.
-
----
-
----
 
 ## Agent Write Rules
 
@@ -321,7 +230,7 @@ Each active repo gets hooks via `setup.sh hooks`. Hook scripts in `ai-config-tra
 
 ---
 
----
+<!-- universal -->
 
 ## Cross-Tool Architecture
 
@@ -393,12 +302,8 @@ Provider keys load through shell aliases named `deepseek`, `qwen`, and `openai` 
 ### oMLX Serving
 
 Local inference at `127.0.0.1:8087`, API key: `mlx`. Max 20GB RAM per model.
-One large model at a time (24GB total). Loaded: qwen2.5-14b (default), qwen3-30b (for heavy analysis, needs `/no_think` in system prompt, 24GB). Fallback: deepseek-chat, kimi-k2.5.
+One large model at a time (24GB total). Loaded: qwen2.5-14b (default), qwen3-30b (for heavy analysis, needs `/no_think` in system prompt, 24GB). Fallback: deepseek-chat, kimi-k2.6.
 Commands: `ollama list` (loaded), `mlx_lm.server --model ... --port 8087`.
-
----
-
----
 
 ## Voice and Style
 
@@ -414,7 +319,7 @@ Never silently absorb a style correction. Every correction is a rule candidate.
 
 ---
 
----
+<!-- universal -->
 
 ## Scope Routing
 
@@ -432,7 +337,7 @@ Apply only rules relevant to the active task. No scope bleed.
 
 ---
 
----
+<!-- universal -->
 
 ## Scope Discipline
 
@@ -472,10 +377,6 @@ Load without being asked.
 | "finish this" / "wrap up branch" / "ready to commit" | `finish-branch` |
 | `/graphify` | `graphify` |
 | Hermes gateway routing failures / OpenCode key 429-401 / model invalid after update / Claude or Hermes routing broken | `ai-routing-doctor` |
-
----
-
----
 
 ## Memory Protocol
 
@@ -553,7 +454,7 @@ This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once repl
 
 | Trigger | Automatic Action |
 |---|---|
-| Any user-facing change | Append entry to `CHANGES.md` (or project's changelog) before declaring done |
+| Any user-facing change | Run `changelog-add "summary"` (or project's changelog script) before declaring done |
 | Remove dead code/fields | Update field map/reference docs if they exist |
 | Fix a bug from known-issues list | Mark issue as resolved with date |
 
@@ -564,10 +465,6 @@ This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once repl
 | Uncommitted changes exist at session start | Warn user and suggest stash or commit before editing |
 | Edit creates merge conflict markers | Stop immediately and ask user; never auto-resolve |
 | About to run `git commit` | Verify no secrets (`.env`, credentials) are staged |
-
----
-
----
 
 ## Knowledge & Context
 
@@ -600,6 +497,7 @@ This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once repl
 - **Plan before executing.** Produce architecture docs, PRDs, and implementation plans before writing code. If San says "just plan don't execute," produce the plan only.
 - **Discord is the universal HITL gate.** Every automated pipeline touching external output routes through Discord for approval before execution.
 - **Google Sheets is the boundary layer between CLI tools and n8n.** CLI writes rows. n8n reads rows. They communicate exclusively through the sheet.
+  - SUPERSEDED for content pipelines 2026-08-05 by ADR-006: n8n retired as publisher. Direct API writers (server routes, scripts, cron) own external posts.
 - **Always implement DLQ / Circuit Breaker patterns** for failed data pipeline jobs.
 - **Always implement a "Fast Test Mode"** (mock data bypassing LLM or external API) during feature development.
 - **Always create a detailed Implementation Plan** offering multiple prototype options before starting major UI builds.
@@ -608,6 +506,7 @@ This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once repl
 - **Docker Container Syncing:** Always rebuild the container (`docker compose up --build -d`) rather than assuming changes take effect locally.
 - **n8n Debuggability:** Use "Code in JavaScript" nodes (with `$http.request`) for MCP calls. Guarantees full payload visibility.
 - **n8n Connectivity:** Use native HTTP Request nodes instead of custom Python inside Code nodes. The Python sandbox is restrictive.
+  - SUPERSEDED 2026-08-05 (ADR-006): do not build new n8n nodes for content pipelines. Historical reference only.
 - **The Content Factory Pipeline:** FETCH (source data) → GENERATE (content packaging) → SAVE (to target DB or Notion).
 - **Ensure safe retries** with idempotency keys.
 - **Prioritize quick wins** to maintain momentum. Ship velocity over perfection.
@@ -625,37 +524,16 @@ Apply `docs/ai/CODE-STANDARDS.md`. That file is the source of truth for:
 
 ---
 
-
-
----
-
-## Memory Layer
-
-Three-tier memory model. All layers are additive. L0 is never modified or trimmed by this section.
-
-**L0 — existing CLAUDE.md auto-load (~15.6K words).** Unchanged. Rules + identity + project registry. Source of truth. Stays as-is.
-
-**L1 — `mempalace wake-up` on session start (~789 tokens).** Returns essential context from the top rooms of the current project's wing. Already installed. Add invocation to every session opener for OpenCode, Hermes, and Codex.
-
-**L2 — on-demand queries (zero token cost until invoked).** Surface via MCP or CLI from any tool:
-- `mempalace search "..."` for decision and conversation recall
-- `graphify query "..."` for code structure questions
-- `graphify path A B` for dependency traces
-
-When to use which:
-- Decision recall, past rationale, conversation search → `mempalace search`
-- Code structure, call graphs, community clusters → `graphify query`
-- Bidirectional: any tool can write a decision via `mempalace hook`, any tool can read it next session
-
-Session start protocol: run `mempalace wake-up` before accepting task instructions. If the tool has MCP access, use the MCP tools directly. If not, use CLI.
-
----
-
 <!-- universal -->
 
+## Maintenance
 
-
----
+- **This file:** Version-bump and re-date when project registry, scope, or core rules change. The sync script propagates core sections to all derived files, appending tool-specific tails.
+- **Rules:** Weekly Synthesis reviews rule effectiveness. Drop any rule unused for 4 weeks.
+- **Style corrections:** Log to `~/.claude/memory/style-corrections.md`. Map to `sandeep-universal-style` skill.
+- **Decision logging:** Significant decisions → `~/.claude/memory/decisions.md` with date and one-line rationale.
+- **Memory:** Run consolidation when 5+ new facts accumulate or any topic file has stale dates.
+- **Derived files sync:** When this file changes, run `python3 ~/.hermes/scripts/sync-rules.py` or wait for the 6-hour Hermes cron to propagate. Tool-specific tails live in `~/.hermes/scripts/tails/`.
 
 ## Instruction Hierarchy
 
@@ -678,10 +556,6 @@ Context imports (load on session start):
 ---
 
 <!-- universal -->
-
----
-
----
 
 ## Cross-Tool Context Sharing
 
@@ -708,15 +582,11 @@ Canonical shared files:
 
 Skill symlink chain: `~/.claude/skills` → `~/.config/opencode/skills` → `~/.hermes/skills/*` + `~/.codex/skills/*`
 
-Git hooks (agent coordination): All repos with `.git` should have symlinks in `.git/hooks/` pointing to `~/Projects/Project26/ai-config-transfer/hooks/git/` (pre-commit, commit-msg, pre-push).
+Git hooks (agent coordination): All repos with `.git` should have symlinks in `.git/hooks/` pointing to `~/Desktop/Project26/ai-config-transfer/hooks/git/` (pre-commit, commit-msg, pre-push).
 
 ---
 
 <!-- universal -->
-
----
-
----
 
 ## Second Brain
 
@@ -727,13 +597,25 @@ Hermes has full vault access. Other tools read vault via CLAUDE.md.
 Hermes handles automated workflows (Daily Brief, Weekly Synthesis). All tools read/write vault for cross-tool persistence.
 File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
 
----
+## Memory Layer
 
----
+Three-tier memory model. All layers are additive. L0 is never modified or trimmed by this section.
 
----
+**L0 — existing CLAUDE.md auto-load (~15.6K words).** Unchanged. Rules + identity + project registry. Source of truth. Stays as-is.
 
----
+**L1 — `mempalace wake-up` on session start (~789 tokens).** Returns essential context from the top rooms of the current project's wing. Already installed. Add invocation to every session opener for OpenCode, Hermes, and Codex.
+
+**L2 — on-demand queries (zero token cost until invoked).** Surface via MCP or CLI from any tool:
+- `mempalace search "..."` for decision and conversation recall
+- `graphify query "..."` for code structure questions
+- `graphify path A B` for dependency traces
+
+When to use which:
+- Decision recall, past rationale, conversation search → `mempalace search`
+- Code structure, call graphs, community clusters → `graphify query`
+- Bidirectional: any tool can write a decision via `mempalace hook`, any tool can read it next session
+
+Session start protocol: run `mempalace wake-up` before accepting task instructions. If the tool has MCP access, use the MCP tools directly. If not, use CLI.
 
 ## Code Style
 
@@ -742,14 +624,7 @@ File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
 - Comments explain WHY, not WHAT.
 - Error handling explicit. Never swallow errors silently.
 - Infrastructure: Docker Compose, Hetzner VPS, Cloudflare Tunnels, Supabase, n8n, DeepSeek V3.
-
----
-
----
-
-
-
----
+  - Updated 2026-08-05: n8n retired for content pipelines (ADR-006). Orchestration via direct API writers and cron.
 
 ## vflow2.0 Deployment (Hetzner VPS)
 
@@ -761,19 +636,61 @@ File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
 - **PM2 processes:** veldonlab + wireframe-worker. Docker: infra-vflow-1.
 - **Health check:** `curl -s -o /dev/null -w "%{http_code}" https://veldonlab.com` → 200
 
----
+<!-- END GENERATED -->
 
----
+<!-- BEGIN LOCAL: project specific. Safe to edit. Preserved across rebuilds. -->
 
----
+## Stack
+- TBD — inspect project files to determine stack
 
-## Maintenance
+## Key Paths
+- Inspect root directory for entry points
 
-- **This file:** Version-bump and re-date when project registry, scope, or core rules change. The sync script propagates core sections to all derived files, appending tool-specific tails.
-- **Rules:** Weekly Synthesis reviews rule effectiveness. Drop any rule unused for 4 weeks.
-- **Style corrections:** Log to `~/.claude/memory/style-corrections.md`. Map to `sandeep-universal-style` skill.
-- **Decision logging:** Significant decisions → `~/.claude/memory/decisions.md` with date and one-line rationale.
-- **Memory:** Run consolidation when 5+ new facts accumulate or any topic file has stale dates.
-- **Derived files sync:** When this file changes, run `python3 ~/.hermes/scripts/sync-rules.py` or wait for the 6-hour Hermes cron to propagate. Tool-specific tails live in `~/.hermes/scripts/tails/`.
+## Notes
+- Project details to be documented on first deep dive
 
----
+## Obsidian Vault
+
+Cross-tool knowledge base: `~/Documents/Obsidian Vault`
+- Project status: [[Projects/RalphFree]]
+- Daily notes: `Daily/YYYY-MM-DD.md`
+- Export LLM outputs: `Outputs/LLM/`
+
+
+# Cross-Tool Rules (Shared by ALL AI tools)
+
+## 6. Reference Files
+
+- Full rules: `~/.claude/CLAUDE.md` (150 lines, memory/scope/safety)
+- OpenCode rules: `~/.config/opencode/AGENTS.md` (135 lines)
+- Cross-tool rules: `~/.claude/context/cross-tool-rules.md`
+- Vault (single source of truth): `~/Documents/Obsidian Vault/CLAUDE.md` (306 lines)
+
+<!-- END LOCAL -->
+
+## OpenCode-Specific
+
+### Skill Activation
+
+- Load `sandeep-universal-style` at the start of every conversation and keep it active for the full response.
+- Load `agent-coordination` when the user mentions multiple agents, concurrent editing, file locking, "another terminal," or "other agent." This skill expands the protocol above with full implementation details.
+- Load `veldonlab-design-system`, `design-director`, `design-variations`, `frontend-blueprint`, and `capture-design` when the request involves product design, UI direction, frontend architecture, design capture, or handoff specs.
+- Load `ai-video-director` when the request involves AI ad creative, Higgsfield, Seedance, cinematic prompts, or prompt packs.
+- If the user names a skill directly, load it immediately.
+- Do not bulk load every skill. Load only the skills relevant to the active task.
+
+### Ralph Commands
+
+- Use `ralph` when the user asks for Ralph or RalphFree execution.
+- Use `ralph_isolated` when the user wants isolated worktree execution or side effect free Ralph runs.
+
+### Agent Modes
+
+- `Build` is the full access primary agent. Treat it as bypass style execution with unrestricted edits, bash, and web fetch.
+- `Plan` is the safer analysis mode. Use it when the user asks for planning, review, architecture, or no edit behavior.
+
+### Compatibility
+
+- OpenCode uses `AGENTS.md` as its primary rule file.
+- `CLAUDE.md` is a compatibility fallback, not the preferred OpenCode entrypoint.
+- Global skills live in `~/.config/opencode/skills`. A Claude compatible symlink may point `~/.claude/skills` to the same directory so both tools share one source of truth.
