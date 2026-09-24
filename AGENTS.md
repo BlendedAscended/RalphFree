@@ -435,7 +435,9 @@ Load without being asked.
 | `/referral` / "write a referral letter" | `referral` |
 | "OPT compliant" / F-1 STEM OPT question | `opt-compliant` |
 | Multiple agents / concurrent editing / "another terminal" | `agent-coordination` |
-| "https://youtube.com" / "https://youtu.be" / "https://x.com" / YouTube/X/LinkedIn URL appears in message | `content-intel-detect` — Queue to ingest pipeline, reply with job ID, do NOT process URL yourself |
+| Explicit content capture request in a Hermes Telegram or Slack message, with a social URL | `content-intel-detect` — Queue it for ingestion and reply with the job ID |
+| Bare social URL, or URL plus “browser use”, research, analyze, compare, or explain | Follow the user's direct task. Do not queue content intelligence or start publishing. |
+| Scheduled Supermac social publishing | `social-automation` and Galaxy content factory. It is separate from content intelligence capture. |
 
 
 | "finish this" / "wrap up branch" / "ready to commit" | `finish-branch` |
@@ -738,27 +740,25 @@ Session start protocol: try `mempalace wake-up` with a short timeout. If palace 
 - JS/TS: camelCase vars/functions, PascalCase components.
 - Comments explain WHY, not WHAT.
 - Error handling explicit. Never swallow errors silently.
-- Infrastructure: Google Cloud (vflow-496309) is canonical per ADR-014. Persistence: Cloud SQL PG18 (domain) + Firestore (agent state); Supabase exited (ADR-049); AlloyDB rejected; GCIP identity (ADR-052). Legacy services (jack-slack) still read Supabase until cutover. Hetzner VPS, Cloudflare Tunnels, n8n (retired for content, ADR-006), DeepSeek V3.
+- Infrastructure: Google Cloud (project vflow-496309) is canonical per ADR-014 and ADR-062. Persistence: Cloud SQL PG18 (domain) + Firestore (agent state); Supabase exited (ADR-049); AlloyDB rejected; GCIP identity (ADR-052). Legacy services (jack-slack) still read Supabase until cutover. Hetzner, Vercel, and direct VPS hosting are retired. Edge: Cloudflare Tunnels and Workers. Orchestration: direct API writers, Cloud Run jobs, and cron.
   - Updated 2026-08-05: n8n retired for content pipelines (ADR-006). Orchestration via direct API writers and cron.
 
-## vflow2.0 Deployment (Hetzner VPS)
+## vflow2.0 Deployment (GCP Fleet VM and Cloud Run)
 
-- **VPS:** root@46.224.38.85, source at `/mnt/HC_Volume_106173782/vflow2.0-src`
-- **Deploy script:** `./deploy.sh` in vflow2.0 repo — fetches env from OpenBao, SCPs to VPS, runs `scripts/veldon-release.sh`
-- **OpenBao access:** All `bao` calls in deploy.sh route through `ssh macdaddy` (OpenBao at localhost:8200 on MacDaddy). MacAttack firewall blocks direct outbound to 100.82.2.87:8200 over Tailscale.
-- **Canonical runbook:** `vflow2.0/docs/deployment-runbook.md`. Read it instead of re-deriving deploy steps. Corrected 2026-08-21 from a real failed-then-fixed deploy.
-- **Quick deploy:** `bash deploy-now.sh > /tmp/deploy.log 2>&1; echo "exit=$?"` from the vflow2.0 repo. Use `bash`, **not** `./deploy-now.sh` (the file is not executable). Never pipe to `tail`: the real error prints ~50 lines before the end and the pipe masks the exit code.
-- **deploy-now.sh:** Guards `git commit -a` with `git diff --quiet ||`, but its auto-commit message is hardcoded and wrong for your change. Commit yourself first. It also runs `git push origin main`.
-- **PM2 processes:** veldonlab + wireframe-worker. Docker `infra-vflow-1` is what actually serves traffic; PM2 `veldonlab` is a shadow, useful only for `pm2 describe veldonlab | grep "exec cwd"` to see which build is live.
-- **HTTP 200 does NOT mean the deploy landed.** On failure the exit trap rolls production back to the previous build and every route keeps returning 200. `exit=0` plus an artifact check is the only proof. Verify against `/gallery`, not `/`.
-- **Release gate:** `PUBLIC_HOSTS` in `scripts/veldon-release.sh`. Any host there returning non-200 rolls back **every** release, including unrelated hotfixes. On 2026-08-21 a 502 on `sandeep.veldonlab.com` kept production on a day-old build and blocked an investor-facing bug fix. Add a host only if losing it should genuinely block a deploy.
-- **Client crashes:** `ssh agent 'grep "\[client-error\]" /root/.pm2/logs/veldonlab-out.log'`. There is no Sentry; `/api/client-error` logs them server side.
+- **Production origin:** GCP fleet VM `veldon-fleet-arm` in `us-central1-f` (project `vflow-496309`). Connected to public edge via Cloudflare tunnel connector `infra-cloudflared-1`.
+- **Canary compute:** Google Cloud Run in `us-central1`.
+- **Canonical release script:** `bash scripts/release-site.sh` from the vflow2.0 repo. It deploys the Cloud Run canary, deploys to `veldon-fleet-arm` through GCP IAP tunnel, purges the Cloudflare edge cache, and verifies public health.
+- **Canonical runbook:** `vflow2.0/docs/deploy/veldonlab-topology.md`. Read it instead of re-deriving deploy steps.
+- **Secrets:** Google Cloud Secret Manager (`gcloud secrets --project=vflow-496309`) manages runtime secrets (`vflow-*`, `jack-*`, `nango-*`). OpenBao runs on MacDaddy (`localhost:8200`) for operator workflows, not on GCP.
+- **Container images:** Google Cloud Artifact Registry (`us-central1-docker.pkg.dev/vflow-496309/vflow`).
+- **Retired infrastructure:** Hetzner mounts, Supabase, and Vercel are retired per ADR-049, ADR-062, and ADR-130. Never cite Hetzner or Vercel as production components.
 
 ## Gemini-Specific
 
 - Gemini CLI uses `GEMINI.md` as its primary rule file.
 - For Gemini-specific MCP server configuration, see `~/.gemini/settings.json`.
 - Large context window: prefer Gemini for tasks requiring full-file analysis or multi-document synthesis.
+- **Browser Automation Hard Stop (MacAttack):** NEVER invoke the built-in `browser_subagent` tool. It launches redundant Chrome processes, steals window focus, clutters the Dock with duplicate icons, and wastes tokens on WebP recordings. For all browser inspection, UI verification, and DOM scraping on macOS, ALWAYS use the background AppleScript runner (`agy-scrape-active` / `browser-subagent-fallback` / `osascript`) targeting the active Chrome window.
 
 ## Projects
 
