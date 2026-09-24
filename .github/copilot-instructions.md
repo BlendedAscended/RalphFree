@@ -47,37 +47,37 @@ You MUST automatically:
 ### Agency Multi Project Rules
 ### Project Registry (Filesystem Paths)
 
-All 2026 projects: ~/Desktop/Project26/Agents/
+All 2026 projects: ~/Projects/Project26/Agents/
 VerbaFlow ecosystem: ~/Desktop/Project25/verbaflow_projects/
 
 | Codename | Path | Description |
 |----------|------|-------------|
-| Samurai / Tensei | ~/Desktop/Project26/Agents/samurai | Chrome extension (Tensei user facing). Rex (rex.verbaflow.llc) front page lives inside this repo. |
-| PriorZap / Aegis | ~/Desktop/Project26/Agents/priorzap | CDS Hooks denial prevention |
-| MLLC | ~/Desktop/Project26/Agents/mllc | Client project (Contract VF MLLC 2026 001) |
-| Aqwa | ~/Desktop/Project26/Agents/aqwa | Fish app |
-| Galaxy | ~/Desktop/Project26/Agents/galaxy | Content CLI / Prometheus pipeline |
-| Galaxy Products | ~/Desktop/Project26/Agents/galaxy-products | Galaxy product pages |
-| Galaxy Personal | ~/Desktop/Project26/Agents/galaxy-Personal | Personal Galaxy variant |
-| DonPortfolio | ~/Desktop/Project26/Agents/DonPortfolio | Portfolio project |
-| Jack | ~/Desktop/Project26/Agents/jack | TBD |
-| RT | ~/Desktop/Project26/Agents/RT | TBD |
-| Gibby | ~/Desktop/Project26/Agents/Gibby | TBD |
-| RalphFree | ~/Desktop/Project26/Agents/RalphFree | CLI fallback chain tool |
-| Refree | ~/Desktop/Project26/Agents/Refree | Referral system |
-| TrustOneServices | ~/Desktop/Project26/Agents/TrustOneServices | TrustOne client/project |
+| Samurai / Tensei | ~/Projects/Project26/Agents/samurai | Chrome extension (Tensei user facing). Rex (rex.verbaflow.llc) front page lives inside this repo. |
+| PriorZap / Aegis | ~/Projects/Project26/Agents/priorzap | CDS Hooks denial prevention |
+| MLLC | ~/Projects/Project26/Agents/mllc | Client project (Contract VF MLLC 2026 001) |
+| Aqwa | ~/Projects/Project26/Agents/aqwa | Fish app |
+| Galaxy | ~/Projects/Project26/Agents/galaxy | Content CLI / Prometheus pipeline |
+| Galaxy Products | ~/Projects/Project26/Agents/galaxy-products | Galaxy product pages |
+| Galaxy Personal | ~/Projects/Project26/Agents/galaxy-Personal | Personal Galaxy variant |
+| DonPortfolio | ~/Projects/Project26/Agents/DonPortfolio | Portfolio project |
+| Jack | ~/Projects/Project26/Agents/jack | TBD |
+| RT | ~/Projects/Project26/Agents/RT | TBD |
+| Gibby | ~/Projects/Project26/Agents/Gibby | TBD |
+| RalphFree | ~/Projects/Project26/Agents/RalphFree | CLI fallback chain tool |
+| Refree | ~/Projects/Project26/Agents/Refree | Referral system |
+| TrustOneServices | ~/Projects/Project26/Agents/TrustOneServices | TrustOne client/project |
 | VFlow 1.0 | ~/Desktop/Project25/verbaflow_projects/vflow1.0 | VerbaFlow monorepo. Routes: main site, portfolio site, agency site. All frontend revamps happen here. 
 | MarketingAI | ~/Desktop/Project25/verbaflow_projects/marketingAI | Marketing automation |
 | Pilot | ~/Desktop/Project25/verbaflow_projects/pilot | Pilot/prototype work |
-| Agents Archive | ~/Desktop/Project26/Agents/agents-archive | Archived/legacy projects (skip unless explicitly requested) |
+| Agents Archive | ~/Projects/Project26/Agents/agents-archive | Archived/legacy projects (skip unless explicitly requested) |
 
 When San references a codename, cd into that path before doing anything.
-When San says "Rex" or "rex.verbaflow.llc," cd into ~/Desktop/Project26/Agents/samurai.
+When San says "Rex" or "rex.verbaflow.llc," cd into ~/Projects/Project26/Agents/samurai.
 When San says "main site," "portfolio site," or "agency site," cd into ~/Desktop/Project25/verbaflow_projects/vflow1.0 and work on the corresponding route.
 When San says "all sites" or "all projects," iterate active projects only (skip agents-archive).
 
 - **Codename every project.** Titan (outreach), Prometheus (content), Aegis/PriorZap (denial prevention), Samurai (resume extension), Aqwa (fish app), Galaxy (content CLI), Gibby (delivery), RalphFree (CLI fallback). Reference by codename in all internal docs.
-- **Local project root:** `/Users/sandeep/Desktop/Project26/Agents` for all VerbaFlow projects.
+- **Local project root:** `/Users/sandeep/Projects/Project26/Agents` for all VerbaFlow projects.
 - **Hetzner VPS working directory:** `~/titan-outreach/` for Docker Compose services. Subdirectories: `{n8n, api, mcp, scripts}`.
 - **Hetzner VPS with Docker Compose and Cloudflare Tunnels** is the standard deployment pattern. No Caddy needed.
 - **Cloudflare tunnel config** at `~/.cloudflared/config.yml` with ingress rules per service hostname.
