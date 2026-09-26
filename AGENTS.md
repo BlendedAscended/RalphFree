@@ -189,8 +189,6 @@ Rules converted so far, on real evidence:
 | **In a port conflict, move the service that does not use the resource** | The architect profile held `0.0.0.0:8644` while owning no webhook routes, so the default gateway's `growth-plan` and `elevenlabs` routes stayed dead through 190 failed binds over 15 hours (2026-09-09) | Every profile inherits the base platform config, so each profile gateway binds the same webhook port. The loser retries forever and logs at ERROR, which reads as handled | `prompt-only` — identify which contender actually serves traffic before moving either |
 | **A provider fallback is a silent quality downgrade; surface it** | HTTP 402 on call #9 fell back from `gpt-6-astra` to `glm-5.3-flash`, and the next 117 calls ran on the weak model emitting 81 token replies against a 316K token context, with no alert (2026-09-09) | Fallback exists for availability, so it treats credit exhaustion like a transient error and logs it at INFO | `prompt-only` — when a session behaves oddly, confirm it is still on the model you chose |
 | **OpenRouter balance is never a blocker: it is subsidized, auto reloads, and may spend up to $10,000/day. Never ask San to fund it or pick a cheaper model to save it; a 402 means auto reload failed, report it once** | Sessions and a 6 hourly watchdog kept flagging OpenRouter balance and asking San to top it up; a Hermes handoff filed it as an issue (2026-09-10) | Funding was only ever recorded as point in time balances, so every tool re-derived "low balance means problem" | `prompt-only`; the `spend_checkpoint.py` balance cron was removed 2026-09-10 |
-| **A blocker verdict must cite the live probe that produced it. Run `bash ~/.hermes/scripts/infra-truth.sh` before writing any status report, blocker list, or critical path; every claimed blocker names the command output that proves it. A blocker you cannot probe live is labeled UNVERIFIED, not asserted.** | Antigravity/Claude-Haiku session reported three false blockers ("no Hetzner replacement compute target", "Linear keys missing from OpenBao", "Docker not started on GCE") — all disproved by live state within minutes; two were fixed by same-day merges, one was misdiagnosed (real crash loop, wrong cause) (2026-09-12) | Session re-derived status from stale notes and prior context instead of probing the named systems; weak model + long session = confident staleness | `script` (`infra-truth.sh` digest) + `prompt-only` citation rule |
-| **`git log --all` never proves work is shipped. To certify a ticket/wave as merged, check `git merge-base --is-ancestor <commit> <default-branch>` or `git log <default-branch>`, never `--all`. When a goal-run isolates work in a worktree ("no edits on main until integration"), that integration step gets its own named owner and a BACKLOG.md line the moment the worktree session ends — never left implicit.** | A single 2026-09-13 goal-run fanned out Wave 9-12 and Wave 15 Track A-C work into worktree branches across jack-slack, vflow2.0, and jack-exec, explicitly deferring integration. It was never merged. Two of the three repos' AGENT_REGISTRY.md then marked that entry `completed` anyway. Nine days later a 2026-09-22 Wave 16 session re-certified "W15-1 through W15-8 are all merged" using `git log --all`, which is true only in the sense that the commits exist on *some* local branch — none of it is on `main`, and main had drifted 54 commits past the fork point by the time this was caught (2026-09-22, reconciliation session) | The `agent-coordination` skill's WORKING.lock protocol covers concurrent-edit safety but has no step for what happens after a worktree-isolated session ends; nothing owns bringing that work back. `git log --all` conflates "exists somewhere in this repo's ref space" with "shipped," so even a diligent check gives a false positive | `prompt-only` — candidate for a script: a nightly `check-unmerged-worktrees.sh` that diffs `git branch --list 'goal/*'`/`wt/*` against default-branch reachability and writes a BACKLOG.md line for anything unmerged past N days |
 
 ## Safety Rules — Always Apply
 
@@ -203,7 +201,6 @@ Rules converted so far, on real evidence:
 - Never auto-resolve merge conflict markers. Stop and ask.
 - Never paste secret literals (API keys, tokens, passwords) into shell command text. Pull them from OpenBao or env vars at runtime. Inline secrets trip content scanners (Hermes Tirith) and force approval prompts that cannot be allowlisted.
 - Before changing an access control setting, prove which key actually enforces it by inspecting the running process and its environment. A plausibly named key in a config file may be inert. (Graduated from correction ledger 2026-08-05, safety severity, 1 occurrence.)
-- **Browser Automation Hard Stop (MacAttack):** NEVER invoke the built in `browser_subagent` tool. It launches redundant Chrome processes, steals window focus, clutters the Dock with duplicate icons, and wastes tokens on WebP recordings. For all browser inspection, UI verification, and DOM scraping on macOS, ALWAYS use the background AppleScript runner (`agy-scrape-active` / `browser-subagent-fallback` / `osascript`) targeting the active Chrome window.
 
 ### Deletion / Cleanup Permission Rules
 
@@ -437,9 +434,7 @@ Load without being asked.
 | `/referral` / "write a referral letter" | `referral` |
 | "OPT compliant" / F-1 STEM OPT question | `opt-compliant` |
 | Multiple agents / concurrent editing / "another terminal" | `agent-coordination` |
-| Explicit content capture request in a Hermes Telegram or Slack message, with a social URL | `content-intel-detect` — Queue it for ingestion and reply with the job ID |
-| Bare social URL, or URL plus “browser use”, research, analyze, compare, or explain | Follow the user's direct task. Do not queue content intelligence or start publishing. |
-| Scheduled Supermac social publishing | `social-automation` and Galaxy content factory. It is separate from content intelligence capture. |
+| "https://youtube.com" / "https://youtu.be" / "https://x.com" / YouTube/X/LinkedIn URL appears in message | `content-intel-detect` — Queue to ingest pipeline, reply with job ID, do NOT process URL yourself |
 
 
 | "finish this" / "wrap up branch" / "ready to commit" | `finish-branch` |
@@ -742,25 +737,27 @@ Session start protocol: try `mempalace wake-up` with a short timeout. If palace 
 - JS/TS: camelCase vars/functions, PascalCase components.
 - Comments explain WHY, not WHAT.
 - Error handling explicit. Never swallow errors silently.
-- Infrastructure: Google Cloud (project vflow-496309) is canonical per ADR-014 and ADR-062. Persistence: Cloud SQL PG18 (domain) + Firestore (agent state); Supabase exited (ADR-049); AlloyDB rejected; GCIP identity (ADR-052). Legacy services (jack-slack) still read Supabase until cutover. Hetzner, Vercel, and direct VPS hosting are retired. Edge: Cloudflare Tunnels and Workers. Orchestration: direct API writers, Cloud Run jobs, and cron.
+- Infrastructure: Google Cloud (vflow-496309) is canonical per ADR-014. Persistence: Cloud SQL PG18 (domain) + Firestore (agent state); Supabase exited (ADR-049); AlloyDB rejected; GCIP identity (ADR-052). Legacy services (jack-slack) still read Supabase until cutover. Hetzner VPS, Cloudflare Tunnels, n8n (retired for content, ADR-006), DeepSeek V3.
   - Updated 2026-08-05: n8n retired for content pipelines (ADR-006). Orchestration via direct API writers and cron.
 
-## vflow2.0 Deployment (GCP Fleet VM and Cloud Run)
+## vflow2.0 Deployment (Hetzner VPS)
 
-- **Production origin:** GCP fleet VM `veldon-fleet-arm` in `us-central1-f` (project `vflow-496309`). Connected to public edge via Cloudflare tunnel connector `infra-cloudflared-1`.
-- **Canary compute:** Google Cloud Run in `us-central1`.
-- **Canonical release script:** `bash scripts/release-site.sh` from the vflow2.0 repo. It deploys the Cloud Run canary, deploys to `veldon-fleet-arm` through GCP IAP tunnel, purges the Cloudflare edge cache, and verifies public health.
-- **Canonical runbook:** `vflow2.0/docs/deploy/veldonlab-topology.md`. Read it instead of re-deriving deploy steps.
-- **Secrets:** Google Cloud Secret Manager (`gcloud secrets --project=vflow-496309`) manages runtime secrets (`vflow-*`, `jack-*`, `nango-*`). OpenBao runs on MacDaddy (`localhost:8200`) for operator workflows, not on GCP.
-- **Container images:** Google Cloud Artifact Registry (`us-central1-docker.pkg.dev/vflow-496309/vflow`).
-- **Retired infrastructure:** Hetzner mounts, Supabase, and Vercel are retired per ADR-049, ADR-062, and ADR-130. Never cite Hetzner or Vercel as production components.
+- **VPS:** root@46.224.38.85, source at `/mnt/HC_Volume_106173782/vflow2.0-src`
+- **Deploy script:** `./deploy.sh` in vflow2.0 repo — fetches env from OpenBao, SCPs to VPS, runs `scripts/veldon-release.sh`
+- **OpenBao access:** All `bao` calls in deploy.sh route through `ssh macdaddy` (OpenBao at localhost:8200 on MacDaddy). MacAttack firewall blocks direct outbound to 100.82.2.87:8200 over Tailscale.
+- **Canonical runbook:** `vflow2.0/docs/deployment-runbook.md`. Read it instead of re-deriving deploy steps. Corrected 2026-08-21 from a real failed-then-fixed deploy.
+- **Quick deploy:** `bash deploy-now.sh > /tmp/deploy.log 2>&1; echo "exit=$?"` from the vflow2.0 repo. Use `bash`, **not** `./deploy-now.sh` (the file is not executable). Never pipe to `tail`: the real error prints ~50 lines before the end and the pipe masks the exit code.
+- **deploy-now.sh:** Guards `git commit -a` with `git diff --quiet ||`, but its auto-commit message is hardcoded and wrong for your change. Commit yourself first. It also runs `git push origin main`.
+- **PM2 processes:** veldonlab + wireframe-worker. Docker `infra-vflow-1` is what actually serves traffic; PM2 `veldonlab` is a shadow, useful only for `pm2 describe veldonlab | grep "exec cwd"` to see which build is live.
+- **HTTP 200 does NOT mean the deploy landed.** On failure the exit trap rolls production back to the previous build and every route keeps returning 200. `exit=0` plus an artifact check is the only proof. Verify against `/gallery`, not `/`.
+- **Release gate:** `PUBLIC_HOSTS` in `scripts/veldon-release.sh`. Any host there returning non-200 rolls back **every** release, including unrelated hotfixes. On 2026-08-21 a 502 on `sandeep.veldonlab.com` kept production on a day-old build and blocked an investor-facing bug fix. Add a host only if losing it should genuinely block a deploy.
+- **Client crashes:** `ssh agent 'grep "\[client-error\]" /root/.pm2/logs/veldonlab-out.log'`. There is no Sentry; `/api/client-error` logs them server side.
 
 ## Gemini-Specific
 
 - Gemini CLI uses `GEMINI.md` as its primary rule file.
 - For Gemini-specific MCP server configuration, see `~/.gemini/settings.json`.
 - Large context window: prefer Gemini for tasks requiring full-file analysis or multi-document synthesis.
-- **Browser Automation Hard Stop (MacAttack):** NEVER invoke the built-in `browser_subagent` tool. It launches redundant Chrome processes, steals window focus, clutters the Dock with duplicate icons, and wastes tokens on WebP recordings. For all browser inspection, UI verification, and DOM scraping on macOS, ALWAYS use the background AppleScript runner (`agy-scrape-active` / `browser-subagent-fallback` / `osascript`) targeting the active Chrome window.
 
 ## Projects
 
