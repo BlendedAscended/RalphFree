@@ -82,6 +82,7 @@ Vault Root
 <!-- universal -->
 
 ## Behavioral Contract — 12 Rules
+<!-- rule-sync:authoritative -->
 
 > Each rule prevents a specific observed failure mode. Source: Forrest Chang's 6-week, 30-codebase study built on Karpathy's January 2026 thread. Compliance holds ~76% for 12 rules; past 14 rules drops to 52%.
 > **Any rule that hasn't prevented a real failure in 4 weeks gets dropped.** This is a living contract, not a museum.
@@ -111,8 +112,8 @@ Vault Root
 ### Session Management
 | # | Rule | Prevents |
 |---|------|----------|
-| R11 | **Hard token budgets.** Per-task: 4,000 tokens. Per-session: 30,000 tokens. Summarize and start fresh when approaching the limit. Surface the breach. | Agent spirals, 90-minute loops |
-| R11b | **One ticket equals one session equals one context window.** If a task cannot be finished and verified in a single session without compaction, it is not a ticket. It is a spec that has not been broken down yet. Session state goes to `{project_root}/.session/active.md`. | Work that overruns its budget invisibly, and mis-sized tickets read as expensive rather than wrong |
+| R11 | **Finish the authorized task.** No inherited token or session budget applies. Honor only limits explicitly set for the current task or enforced by the runtime. Use checkpoints to control drift and continue until the requested outcome is verified or a concrete blocker is identified. | Arbitrary stopping with authorized work unfinished |
+| R11b | **Checkpoint and continue.** Break work into verifiable steps and save session state to `{project_root}/.session/active.md`. Continue the authorized task across context compaction or resumed sessions; a context window is not a completion boundary. | Work lost during compaction or an unnecessary handoff |
 | R12 | **Checkpoint every significant step.** Summarize what was done, what's verified, what's left. Don't continue from a state you can't describe back. If you lose track, stop and restate. | Multi-step refactors losing state |
 | R13 | **Drain the backlog before closing.** Before ending any session: scan for features, ideas, or changes discussed but not implemented. Write each one to `BACKLOG.md` in the project root (create if absent). Format: `- [ ] [YYYY-MM-DD] [tool] Item — one-line context`. Never let a discussed idea die in session context. | Ideas discussed in one session, never surfaced again |
 
@@ -332,14 +333,14 @@ Three tiers. Full rationale in `~/.claude/memory/decisions.md`.
 
 ### Config Sync (Critical)
 
-All 7 tools share configs via symlinks. Single source of truth paths:
+Tools use a mix of symlinks and file copies. Resolve the active path and verify content before claiming a change propagated. Canonical source paths:
 - **Instructions:** `~/Documents/Obsidian Vault/CLAUDE.md` (this file) propagated to all tools
 - **Skills:** `~/.config/opencode/skills/` → symlinked to `~/.claude/skills/`, `~/.hermes/skills/*`, `~/.codex/skills/*`
 - **MCP servers:** Must be added to ALL 3 configs: `opencode.json`, `~/.claude.json`, `~/.hermes/config.yaml`. Claude Code does NOT read `mcpServers` from `~/.claude/settings.json`. A block of 7 servers sat there silently doing nothing until 2026-09-09.
 - **Git hooks:** All repos symlink `.git/hooks/` → `~/Projects/Project26/ai-config-transfer/hooks/git/`
 - **Cross-tool rules:** `~/.claude/context/cross-tool-rules.md` — changelog, WORKING.lock, formatting, verification, git safety
 
-When updating this file, the sync script (`~/.hermes/scripts/sync-rules.py`) propagates changes to all derived files. If you edit a derived file directly, the script merges NEW content back into this file.
+The sync script (`~/.hermes/scripts/sync-rules.py`) propagates supported instruction targets. Back merge is report only; derived edits do not automatically change this source. Verify retired rules by exact content in every active target, including Copilot files distributed separately.
 
 ### MCP Servers
 
@@ -347,7 +348,7 @@ All AI tools share the same MCP server set. If you add a new MCP server, add it 
 - **OpenCode**: `~/.config/opencode/opencode.json` → `mcp` key (command as array)
 - **Claude Code**: `~/.claude.json` → top level `mcpServers` key. Never hand edit it: `claude mcp add --scope user <name> -- <cmd> <args>` for stdio, `claude mcp add --transport http --scope user <name> <url>` for remote. Verify with `claude mcp list`, which health checks every server and is the only proof one is loaded. For token auth pass `--header 'Authorization: Bearer ${VAR}'` in single quotes: Claude Code expands `${VAR}` at runtime in user scope (verified 2026-09-09, the docs only promise this for `.mcp.json`), so no secret is written to disk. A vendor whose OAuth lacks dynamic client registration (Slack) cannot be added by URL at all: install its official plugin instead.
 - **Hermes**: `~/.hermes/config.yaml` → `mcp_servers` key (command + args in YAML)
-- **Codex**: No MCP support (uses project-level AGENTS.md symlinked to `~/.claude/CLAUDE.md`)
+- **Codex**: Discover MCP servers, native connectors, and tools exposed by the installed runtime. `AGENTS.md` supplies instructions; it does not define the available tool inventory.
 
 Current shared MCP servers:
 | Server | Command | Purpose |
@@ -597,7 +598,7 @@ This replaces the old read-then-prepend protocol: OpenCode (kimi-k2.6) once repl
 
 ### Workflow & Automation Rules
 
-- **Plan before executing.** Produce architecture docs, PRDs, and implementation plans before writing code. If San says "just plan don't execute," produce the plan only.
+- **Plan in proportion to the task.** A request to fix, build, or finish authorizes implementation. State a short plan for routine work and continue; use design documents for major changes. Stop after planning only when San explicitly requests planning only.
 - **Default to no human gate. Updated 2026-08-19.** HITL was introduced when model output could not be trusted unattended. It no longer earns its cost and mostly gets in the way, so the default is now autonomous execution, not approval.
   - **HITL now means exactly one thing: a real person wants to talk to San.** The veldonlab.com chat box asking for a human, an inbound client or customer requesting a conversation. Treat that as fast routing to San, not as an approval step.
   - Everything else runs unattended: content publishing, outreach, resume delivery, deploys, agent runs. Make actions idempotent and reversible rather than gated, and alert on failure.
@@ -707,9 +708,9 @@ File paths: absolute only. Use `[[WikiLinks]]` for connectivity.
 
 ## Memory Layer
 
-Three-tier memory model. All layers are additive. L0 is never modified or trimmed by this section.
+Memory layers preserve useful context. Active instructions must reflect current user decisions: retire superseded rules at their source and update the tool copies. Keep historical evidence as history, not as current policy.
 
-**L0 — existing CLAUDE.md auto-load (~15.6K words).** Unchanged. Rules + identity + project registry. Source of truth. Stays as-is.
+**L0 — current shared instructions.** Rules, identity, and project registry. Keep this source current; user corrections can revise or retire rules. Its size and existing wording are not protected from maintenance.
 
 **L1 — `mempalace wake-up` on session start (~789 tokens).** Returns essential context from the top rooms of the current project's wing. Already installed. Add invocation to every session opener for OpenCode, Hermes, and Codex.
 
