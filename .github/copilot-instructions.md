@@ -459,8 +459,9 @@ Hard stops, no exceptions:
 
 ### Pricing and Business Rules
 
-- **Pricing Display:** Never display hardcoded single prices. Present flexible ranges (e.g., "$Min to $Max").
-- **Pricing Values:** Maximum values end in '95' (e.g., $495, $995).
+- **Pricing Scope (rescoped 2026-10-26):** These pricing rules apply to agency estimates, quotes, and proposals for Veldon client services. Self serve product tiers (Jack plans, the vflow2.0 subscription catalog) follow the live billing catalog; single prices and per month labels there are deliberate decisions, not violations.
+- **Pricing Display:** In estimates and proposals, never display hardcoded single prices. Present flexible ranges (e.g., "$Min to $Max").
+- **Pricing Values:** Maximum values in estimate ranges end in '95' (e.g., $495, $995).
 - **Billing Language:** Avoid "per month", "monthly", "yearly" in estimates. Use project agnostic or retainer intent language.
 - **Location Permissions:** Never trigger intrusive browser geolocation prompts on initial load. Default to broad region.
 - **Public facing applications should minimize user friction.** Never force rigid folder structures when root directory access is sufficient.
