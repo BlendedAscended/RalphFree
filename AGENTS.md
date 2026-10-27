@@ -244,7 +244,7 @@ When unsure, ask. But do not ask for routine cache cleanup or service restart un
 
 ## Concurrent Agent Protocol (ALWAYS ACTIVE — AUTOMATIC)
 
-San runs multiple AI tools simultaneously: OpenCode, Claude Code, Codex, Hermes, VS Code Copilot, Gemini CLI, OpenClaw. Every session MUST follow the lock protocol before editing any file.
+San runs multiple AI tools simultaneously: Claude Code, Codex, Hermes, VS Code Copilot, Gemini CLI / Antigravity IDE. Every session MUST follow the lock protocol before editing any file.
 
 **Automatic behavior:** If the working directory contains a `.git` folder or `AGENTS.md`, this is a project repo. You MUST create `WORKING.lock` before making ANY edit. No exceptions.
 
@@ -304,26 +304,22 @@ Each active repo gets hooks via `setup.sh hooks`. Hook scripts in `ai-config-tra
 
 | Tool | Lane | Model |
 |---|---|---|
-| OpenCode | Daily coding | Mimo V2.5 Pro (Go), MiniMax M3 fallback |
-| OpenClaw | Orchestration, scheduling, HITL gate | pm-san: Qwen 3.6 Plus (2h), design-lead: Qwen 3.6 Plus (4h), daemon: GLM 5.1 (6h) |
-| Claude Code | Hard refactors, architecture, complex debugging | Opus 4.6 (escalation only) |
-| Hermes | Knowledge compounding, cron automation | Mimo V2.5 Pro default, GLM 5.1 cached reads |
-| Codex | Extended coding sessions, sandboxing | OpenAI models (subscription) |
+| Claude Code | Daily coding, hard refactors, architecture | Sonnet / Opus 5.5 (monthly frontier releases) |
+| Codex | Extended coding sessions, sandboxing, Python | OpenAI Sol 6.1 / frontier subscription models |
+| Gemini CLI / Antigravity | Large context, TypeScript repairs, IDE agent | Gemini 4 Argon / Gemini models |
+| Hermes | Knowledge compounding, cron automation | Frontier models default, cached reads |
 | VS Code Copilot | Inline assist | GitHub Copilot |
-| Gemini CLI | Supplementary, large context. MacDaddy only; MacAttack runs Antigravity IDE | Gemini models |
 
 Cross-tool config:
 | Tool | Lane | Model |
 |---|---|---|
-| OpenCode | Daily coding | Mimo V2.5 Pro (Go), MiniMax M3 fallback |
-| Claude Code | Hard refactors, escalation | Opus 4.6 (escalation only) |
-| Codex | Extended sessions, sandboxing | OpenAI models (subscription) |
+| Claude Code | Architecture, hard refactors, escalation | Opus 5.5 (or newest Opus, escalation only) |
+| Codex | Extended sessions, sandboxing, Python backend | OpenAI subscription models (monthly releases) |
+| Gemini CLI / Antigravity | Large context, TypeScript, full app debugging | Gemini 4 Argon / Gemini models |
+| Hermes | Knowledge compounding, cron | Frontier models default, cached reads |
 | VS Code Copilot | Inline assist | GitHub Copilot |
-| Gemini CLI | Supplementary, large context. MacDaddy only; MacAttack runs Antigravity IDE | Gemini models |
-| Hermes | Knowledge compounding, cron | Mimo V2.5 Pro default, GLM 5.1 cached |
-| OpenClaw | Orchestration, HITL gate | Qwen 3.6 Plus, GLM 5.1 |
 
-Escalation: OpenCode Go → OpenCode Zen (pay-per-use) → Claude Code (Opus 4.6) → Codex.
+Escalation: Codex / Claude Sonnet → Claude Code (Opus 5.5) → Codex Deep Sandbox.
 
 ### Runtime Ownership (decided 2026-07-03)
 
