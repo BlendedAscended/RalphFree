@@ -2,6 +2,7 @@
 <!-- project: RalphFree | source: vault CLAUDE.md | regenerate: agents-rebuild.py -->
 
 ## Who I Am
+<!-- rule-sync:authoritative -->
 
 **Name:** San Ghotra  
 **Company:** Veldon Lab (founder)  
@@ -19,6 +20,7 @@
 <!-- universal -->
 
 ## Current Projects (16 active)
+<!-- rule-sync:authoritative -->
 
 ### High Priority
 | Project | What | Status |
@@ -243,6 +245,7 @@ When unsure, ask. But do not ask for routine cache cleanup or service restart un
 <!-- universal -->
 
 ## Concurrent Agent Protocol (ALWAYS ACTIVE — AUTOMATIC)
+<!-- rule-sync:authoritative -->
 
 San runs multiple AI tools simultaneously: Claude Code, Codex, Hermes, VS Code Copilot, Gemini CLI / Antigravity IDE. Every session MUST follow the lock protocol before editing any file.
 
@@ -301,6 +304,7 @@ Each active repo gets hooks via `setup.sh hooks`. Hook scripts in `ai-config-tra
 <!-- universal -->
 
 ## Cross-Tool Architecture
+<!-- rule-sync:authoritative -->
 
 | Tool | Lane | Model |
 |---|---|---|
@@ -669,6 +673,7 @@ Context imports (load on session start):
 <!-- universal -->
 
 ## Cross-Tool Context Sharing
+<!-- rule-sync:authoritative -->
 
 Shared files (one edit propagates to all):
 - `~/.claude/CLAUDE.md` — master control plane. OpenCode reads via `opencode.json` relative path.
@@ -693,7 +698,7 @@ Canonical shared files:
 
 Skill symlink chain: `~/.claude/skills` → `~/.config/opencode/skills` → `~/.hermes/skills/*` + `~/.codex/skills/*`
 
-Git hooks (agent coordination): All repos with `.git` should have symlinks in `.git/hooks/` pointing to `~/Desktop/Project26/ai-config-transfer/hooks/git/` (pre-commit, commit-msg, pre-push).
+Git hooks (agent coordination): All repos with `.git` should have symlinks in `.git/hooks/` pointing to `~/Projects/Project26/ai-config-transfer/hooks/git/` (pre-commit, commit-msg, pre-push).
 
 ---
 
