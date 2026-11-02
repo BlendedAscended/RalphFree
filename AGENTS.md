@@ -754,6 +754,39 @@ Session start protocol: try `mempalace wake-up` with a short timeout. If palace 
 - **Release gate:** `PUBLIC_HOSTS` in `scripts/veldon-release.sh`. Any host there returning non-200 rolls back **every** release, including unrelated hotfixes. On 2026-08-21 a 502 on `sandeep.veldonlab.com` kept production on a day-old build and blocked an investor-facing bug fix. Add a host only if losing it should genuinely block a deploy.
 - **Client crashes:** `ssh agent 'grep "\[client-error\]" /root/.pm2/logs/veldonlab-out.log'`. There is no Sentry; `/api/client-error` logs them server side.
 
+
+---
+
+---
+<!-- universal -->
+
+## OpenCode-Specific
+
+### Skill Activation
+
+- Load `sandeep-universal-style` at the start of every conversation and keep it active for the full response.
+- Load `agent-coordination` when the user mentions multiple agents, concurrent editing, file locking, "another terminal," or "other agent." This skill expands the protocol above with full implementation details.
+- Load `veldonlab-design-system`, `design-director`, `design-variations`, `frontend-blueprint`, and `capture-design` when the request involves product design, UI direction, frontend architecture, design capture, or handoff specs.
+- Load `ai-video-director` when the request involves AI ad creative, Higgsfield, Seedance, cinematic prompts, or prompt packs.
+- If the user names a skill directly, load it immediately.
+- Do not bulk load every skill. Load only the skills relevant to the active task.
+
+### Ralph Commands
+
+- Use `ralph` when the user asks for Ralph or RalphFree execution.
+- Use `ralph_isolated` when the user wants isolated worktree execution or side effect free Ralph runs.
+
+### Agent Modes
+
+- `Build` is the full access primary agent. Treat it as bypass style execution with unrestricted edits, bash, and web fetch.
+- `Plan` is the safer analysis mode. Use it when the user asks for planning, review, architecture, or no edit behavior.
+
+### Compatibility
+
+- OpenCode uses `AGENTS.md` as its primary rule file.
+- `CLAUDE.md` is a compatibility fallback, not the preferred OpenCode entrypoint.
+- Global skills live in `~/.config/opencode/skills`. A Claude compatible symlink may point `~/.claude/skills` to the same directory so both tools share one source of truth.
+
 ## Gemini-Specific
 
 - Gemini CLI uses `GEMINI.md` as its primary rule file.
