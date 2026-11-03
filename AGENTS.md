@@ -667,6 +667,8 @@ Apply `docs/ai/CODE-STANDARDS.md`. That file is the source of truth for:
 8. `~/.claude/memory/MEMORY.md` — living session context, read at start
 9. Task specific skill files loaded on demand
 
+**Company alignment wins on goals, bets and non negotiables.** `configs/company/` in the `ai-config-transfer` repo holds the constitution (K1 to K6, N1 to N12), the ranked bets, the dated facts and the machine gates. `configs/company/generated/ALIGNMENT.md` is generated from those sources and is the current statement of who we are, what we are building, what we are betting on and which gates apply. Where this file and the generated alignment file disagree on goals, bets or non negotiables, the generated file wins. Never edit a generated file by hand. Edit `configs/company/` and run `python3 scripts/alignment-sync.py`.
+
 Context imports (load on session start):
 @~/.claude/context/projects.md
 @~/.claude/context/engineering.md
